@@ -1,0 +1,9 @@
+[submodule "libs/C_data_structures"]
+	path = libs/C_data_structures
+	url = https://github.com/rpereira-dev/C_data_structures
+[submodule "libs/C_maths"]
+	path = libs/C_maths
+	url = https://github.com/rpereira-dev/C_maths.git
+[submodule "libs/glfw"]
+	path = libs/glfw
+	url = https://github.com/glfw/glfw.git
