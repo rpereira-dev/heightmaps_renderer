@@ -11,6 +11,7 @@
 # include <string.h>
 # include <fcntl.h>
 # include <unistd.h>
+# include <string.h>
 
 typedef struct	s_camera {
 	t_vec3	pos;
@@ -29,5 +30,16 @@ typedef struct 	s_terrain {
 typedef struct 	s_world {
 	t_hmap	* terrains;
 }				t_world;
+
+/** the renderer part of the program */
+typedef struct 	s_renderer {
+	t_glh_program * program;
+}				t_renderer;
+
+void rendererUpdate(t_world * world, t_renderer * renderer, t_camera * camera);
+
+void worldUpdate(t_world * world, t_camera * camera);
+
+void cameraUpdate(t_camera * camera);
 
 #endif

@@ -1,8 +1,18 @@
 #ifndef GLH_H
 # define GLH_H
 
+# ifdef __APPLE__
+# 	define GLFW_INCLUDE_GLCOREARB
+# endif
+
+# ifdef _WIN32
+# 	include <GL/glew.h>
+# endif
+
 # include "GLFW/glfw3.h"
 # include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
 
 typedef struct 	s_glh_window {
 	void	* pointer;
@@ -14,7 +24,16 @@ typedef struct	s_glh_context {
 	t_glh_window * window;
 }				t_glh_context;
 
-#include "glh.h"
+# define GLH_SHADER_VERTEX (0)
+# define GLH_SHADER_GEOMETRY (1)
+# define GLH_SHADER_FRAGMENT (2)
+# define GLH_SHADER_COMPUTE (3)
+# define GLH_SHADER_MAX_ID (4)
+
+typedef struct 	s_glh_program {
+	int id;
+	int shaders[GLH_SHADER_MAX_ID];
+}				t_glh_program;
 
 extern int _glh_debug;
 extern t_glh_context * _glh_context;

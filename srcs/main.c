@@ -1,26 +1,42 @@
 #include "renderer.h"
 
-void render(t_world * world, t_camera * camera) {
-	(void)world;
-	(void)camera;
-}
-
 int main(void) {
 
-	t_world world;
-	t_camera camera;
+
+	printf("Initializing openGL...\n");
+
+	glhInit();
 
 	printf("Creating gl context...\n");
-	t_glh_context * context = glhCreateContext();
 
-	printf("Make gl context current...\n");
+	t_glh_context * context = glhCreateContext();
+	if (context == NULL) {
+		fprintf(stderr, "Failed to create gl context.\n");
+		return (EXIT_FAILURE);
+	}
+
+	if (context->window == NULL) {
+		fprintf(stderr, "Failed to create gl window.\n");
+		return (EXIT_FAILURE);
+	}
+
+	printf("Making gl context current...\n");
     glhMakeContextCurrent(context);
 
 	printf("Loop started...\n");
+
+	t_world world;
+	t_renderer renderer;
+	t_camera camera;
+
     while (!glhWindowShouldClose(context->window)) {
 
     	glhClear(GL_COLOR_BUFFER_BIT);
-    	render(&world, &camera);
+    	
+    	cameraUpdate(&camera);
+    	worldUpdate(&world, &camera);
+    	rendererUpdate(&world, &renderer, &camera);
+
     	glhSwapBuffer(context->window);
     	glhPollEvents();
     }

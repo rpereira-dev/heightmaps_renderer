@@ -12,11 +12,11 @@ LIBGL = $(LIBFOLDER)/glfw
 LIBGL_STATIC = $(LIBGL)/build/src/libglfw3.a
 
 LIB_STATIC = $(LIBC_STATIC) $(LIBM_STATIC) $(LIBGL_STATIC)
-LIB_OTHER = -lgdi32 -lopengl32 -luser32 -lkernel32 -L/lib -lopenal
+LIB_OTHER = -lgdi32 -lopengl32 -luser32 -lkernel32 -lglew32
 
 SRCS = $(wildcard ./srcs/*.c)
 C_OBJ = $(SRCS:.c=.o)
-CC = gcc
+CC = x86_64-w64-mingw32-gcc
 FLAGS = -Wall -Werror -Wextra
 INC = -I ./includes -I $(LIBC)/includes -I $(LIBM)/includes -I $(LIBGL)/include
 
