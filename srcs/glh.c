@@ -30,12 +30,8 @@ t_glh_context * glhCreateContext(void) {
 	if (context == NULL) {
 		return (NULL);
 	}
-	context->window = glhCreateWindow();
+	context->window = glhWindowCreate();
 	return (context);
-}
-
-void glhDestroyWindow(t_glh_window * window) {
-	glfwDestroyWindow(window->pointer);
 }
 
 void glhDestroyContext(t_glh_context * context) {
@@ -43,7 +39,7 @@ void glhDestroyContext(t_glh_context * context) {
 		_glh_context = NULL;
 	}
 
-	glhDestroyWindow(context->window);
+	glhWindowDestroy(context->window);
 	context->window = NULL;
 	free(context);
 }
@@ -57,11 +53,7 @@ void glhMakeContextCurrent(t_glh_context * context) {
 	_glh_context = context;
 }
 
-void glhPollEvents() {
-	glfwPollEvents();
-}
-
-	/** get the last set context */
+/** get the last set context */
 t_glh_context * glhGetContext() {
 	return (_glh_context);
 }
@@ -100,8 +92,10 @@ void glhCheckError(char * label) {
 	printf("%s : GLH ERROR CHECK : %s\n", label, str);
 }
 
+/** window related functions */
+
 /** create and return a new gl window */
-t_glh_window * glhCreateWindow() {
+t_glh_window * glhWindowCreate() {
 	static char * DEFAULT_WINDOW_TITLE = "Default Title";
 	static int DEFAULT_WINDOW_WIDTH = 1100;
 	static int DEFAULT_WINDOW_HEIGHT = 1100 / 1.6f;
@@ -127,12 +121,44 @@ int glhWindowShouldClose(t_glh_window * window) {
 	return (glfwWindowShouldClose(window->pointer));
 }
 
-void glhSwapBuffer(t_glh_window * window) {
-	glfwSwapBuffers(window->pointer);
+void glhWindowClose(t_glh_window * window) {
+	glfwSetWindowShouldClose(window->pointer, 1);
 }
 
+/** destroy a window */
+void glhWindowDestroy(t_glh_window * window) {
+	glfwDestroyWindow(window->pointer);
+}
+
+/** set window title */
+void glhWindowSetTitle(t_glh_window * window, char * title) {
+	glfwSetWindowTitle(window->pointer, title);
+}
+
+void glhWindowSetSize(t_glh_window * window, int width, int height) {
+	glfwSetWindowSize(window->pointer, width, height);
+}
+
+void glhWindowUpdate(t_glh_window * window) {
+	window->prev_mouseX = window->mouseX;
+	window->prev_mouseY = window->mouseY;
+	glfwGetCursorPos(window->pointer, &(window->mouseX), &(window->mouseY));
+	glfwPollEvents();
+}
+
+/** swap buffers */
+void glhSwapBuffer(t_glh_window * window) {
+	glfwSwapBuffers(window->pointer);
+	window->frames_swapped++;
+}
+
+/** clear the buffers */
 void glhClear(int bufferbits) {
 	glClear(bufferbits);
+}
+
+void glhClearColor(float r, float g, float b, float a) {
+	glClearColor(r, g, b, a);
 }
 
 /** program functions */

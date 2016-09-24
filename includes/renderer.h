@@ -13,6 +13,7 @@
 # include <unistd.h>
 # include <string.h>
 
+/** the camera data structures */
 typedef struct	s_camera {
 	t_vec3	pos;
 	float	fov;
@@ -21,12 +22,21 @@ typedef struct	s_camera {
 	t_mat4	mview;
 	t_mat4	mproj;
 	t_mat4	mviewproj;
+	float	render_distance;
 }				t_camera;
 
-typedef struct 	s_terrain {
+// number of vertex per terrain
+# define TERRAIN_VERTEX_COUNT (16)
+//terrain width (and height)
+# define TERRAIN_SIZE (256)
 
+/** a terrain */
+typedef struct 	s_terrain {
+	int x, y, z;
+	float heights[TERRAIN_VERTEX_COUNT * TERRAIN_VERTEX_COUNT];
 }				t_terrain;
 
+/** the world */
 typedef struct 	s_world {
 	t_hmap	* terrains;
 }				t_world;
@@ -36,10 +46,16 @@ typedef struct 	s_renderer {
 	t_glh_program * program;
 }				t_renderer;
 
-void rendererUpdate(t_world * world, t_renderer * renderer, t_camera * camera);
+//renderer related functions
+void rendererInit(t_renderer * renderer);
+void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera);
 
+//world related functions
+void worldInit(t_world * world);
 void worldUpdate(t_world * world, t_camera * camera);
 
+//camera related functions
+void cameraInit(t_camera * camera);
 void cameraUpdate(t_camera * camera);
 
 #endif

@@ -29,16 +29,21 @@ int main(void) {
 	t_renderer renderer;
 	t_camera camera;
 
+
+	worldInit(&world);
+	rendererInit(&renderer);
+	cameraInit(&camera);
+
     while (!glhWindowShouldClose(context->window)) {
 
     	glhClear(GL_COLOR_BUFFER_BIT);
     	
+    	glhWindowUpdate(context->window);
     	cameraUpdate(&camera);
     	worldUpdate(&world, &camera);
-    	rendererUpdate(&world, &renderer, &camera);
+    	rendererUpdate(context, &world, &renderer, &camera);
 
     	glhSwapBuffer(context->window);
-    	glhPollEvents();
     }
 
 	printf("Loop ended.\n");
