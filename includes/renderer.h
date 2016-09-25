@@ -12,6 +12,7 @@
 # include <fcntl.h>
 # include <unistd.h>
 # include <string.h>
+# include <time.h>
 
 /** the camera data structures */
 typedef struct	s_camera {
@@ -48,14 +49,18 @@ typedef struct 	s_renderer {
 
 //renderer related functions
 void rendererInit(t_renderer * renderer);
+void rendererDelete(t_renderer * renderer);
 void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera);
+void rendererRender(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera);
 
 //world related functions
 void worldInit(t_world * world);
+void worldDelete(t_world * world);
 void worldUpdate(t_world * world, t_camera * camera);
 
 //camera related functions
 void cameraInit(t_camera * camera);
+void cameraDelete(t_camera * camera);
 void cameraUpdate(t_camera * camera);
 
 #endif
