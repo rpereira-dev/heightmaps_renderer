@@ -74,6 +74,8 @@ int main(int argc, char **argv) {
 	cameraInit(&camera);
 	printf("Initializing renderer...\n");
 	rendererInit(&renderer);
+	printf("Initializing inputs...\n");
+	inputInit(context);
 
 	printf("Loop started...\n");
     while (!glhWindowShouldClose(context->window)) {

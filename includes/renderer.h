@@ -26,15 +26,20 @@ typedef struct	s_camera {
 	float	render_distance;
 }				t_camera;
 
+//terrain detail (number of vertex per line)
+# define TERRAIN_DETAIL (16)
 // number of vertex per terrain
-# define TERRAIN_VERTEX_COUNT (16)
+# define TERRAIN_VERTEX_COUNT (TERRAIN_DETAIL * TERRAIN_DETAIL * 6)
+//float per vertices, i.e, (x, y, z)
+# define TERRAIN_FLOAT_PER_VERTEX (3)
 //terrain width (and height)
 # define TERRAIN_SIZE (256)
 
 /** a terrain */
 typedef struct 	s_terrain {
-	int x, y, z;
-	float heights[TERRAIN_VERTEX_COUNT * TERRAIN_VERTEX_COUNT];
+	int gridX, gridY;
+	GLuint vao;
+	GLuint vbo;
 }				t_terrain;
 
 /** the world */
@@ -58,9 +63,18 @@ void worldInit(t_world * world);
 void worldDelete(t_world * world);
 void worldUpdate(t_world * world, t_camera * camera);
 
+//terrains
+t_terrain *	terrainNew(int gridX, int gridY);
+void 		terrainDelete(t_terrain * terrain);
+void 		terrainGenerate(t_terrain * terrain);
+void		terrainLoadHeightMap(t_terrain * terrains, int * n, char const * bmpfile);
+
 //camera related functions
 void cameraInit(t_camera * camera);
 void cameraDelete(t_camera * camera);
 void cameraUpdate(t_camera * camera);
+
+//inputs
+void inputInit(t_glh_context * context);
 
 #endif

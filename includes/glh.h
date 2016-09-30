@@ -101,4 +101,22 @@ void glhProgramLoadUniformVec4(int location, float x, float y, float z, float w)
 void glhProgramLoadUniformMatrix4f(int location, float * mat4);
 int glhProgramGetUniform(t_glh_program * program, char * name);
 
+//vao / vbo
+GLuint glhVAOGen(void);
+GLuint glhVBOGen(void);
+
+void glhVAODelete(GLuint vao);
+void glhVBODelete(GLuint vbo);
+
+void glhVAOBind(GLuint vao);
+void glhVAOUnbind(void);
+
+void glhVBOData(GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage);
+
+void glhVAOSetAttribute(GLuint attributeID, GLint length, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * offset);
+void glhVAOEnableAttribute(GLuint id);
+
+void glhVBOBind(GLuint target, GLuint vbo, GLintptr offset, GLintptr stride);
+void glhVBOUnbind(GLenum target);
+
 #endif

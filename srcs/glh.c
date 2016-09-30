@@ -259,3 +259,52 @@ void glhProgramLoadUniformMatrix4f(int location, float * mat4) {
 int glhProgramGetUniform(t_glh_program * program, char * name) {
 	return (glGetUniformLocation(program->id, name));
 }
+
+// vao and vbo bindings
+GLuint glhVAOGen(void) {
+	GLuint dst;
+	glGenVertexArrays(1, &dst);
+	return (dst);
+}
+
+GLuint glhVBOGen(void) {
+	GLuint dst;
+	glGenBuffers(1, &dst);
+	return (dst);
+}
+
+void glhVAODelete(GLuint vao) {
+	glDeleteVertexArrays(1, &vao);
+}
+
+void glhVBODelete(GLuint vbo) {
+	glDeleteBuffers(1, &vbo);
+}
+
+void glhVBOData(GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage) {
+	glBufferData(target, size, data, usage);
+}
+
+void glhVAOBind(GLuint vao) {
+	glBindVertexArray(vao);
+}
+
+void glhVAOUnbind(void) {
+	glhVAOBind(0);
+}
+
+void glhVAOSetAttribute(GLuint attributeID, GLint length, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * offset) {
+	glVertexAttribPointer(attributeID, length, type, normalized, stride, offset);
+}
+
+void glhVAOEnableAttribute(GLuint id) {
+	glEnableVertexAttribArray(id);
+}
+
+void glhVBOBind(GLuint target, GLuint vbo, GLintptr offset, GLintptr stride) {
+	glBindVertexBuffer(vbo, target, offset, stride);
+}
+
+void glhVBOUnbind(GLuint target) {
+	glhVBOBind(target, 0, 0, 0);
+}
