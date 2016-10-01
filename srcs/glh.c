@@ -12,6 +12,7 @@ int glhInit() {
 	if (!glfwInit()) {
 		return (0);
 	}
+
 	glfwSetErrorCallback(errorCallback);
 	return (1);
 }
@@ -51,6 +52,14 @@ void glhMakeContextCurrent(t_glh_context * context) {
 
 	// singleton update
 	_glh_context = context;
+
+    //initialize glew if needed
+    #ifdef _WIN32
+		GLenum err = glewInit();
+		if (err != GLEW_OK) {
+			fprintf(stderr, "glew err: %s\n", glewGetErrorString(err));
+		}
+    #endif
 }
 
 /** get the last set context */
@@ -174,7 +183,7 @@ t_glh_program * glhProgramNew(void) {
 }
 
 /** add a shader to the program */
-int glhProgramAddShader(t_glh_program * program, int shaderID, int shaderType) {
+int glhProgramAddShader(t_glh_program * program, GLuint shaderID, int shaderType) {
 	if (shaderType < 0 || shaderType >= 4) {
 		return (0);
 	}
@@ -183,10 +192,14 @@ int glhProgramAddShader(t_glh_program * program, int shaderID, int shaderType) {
 }
 
 /** link the program */
-void glhProgramLink(t_glh_program * program, void (*fbindAttributes)(), void (*fLinkUniforms)()) {
+void glhProgramLink(t_glh_program * program, void (*fbindAttributes)(t_glh_program *), void (*fLinkUniforms)(t_glh_program *)) {
+
+	glhCheckError("a");
 
 	//create a new program
 	program->id = glCreateProgram();
+
+	glhCheckError("b");
 
 	//for each shaders, attach it
 	int i;
@@ -196,11 +209,16 @@ void glhProgramLink(t_glh_program * program, void (*fbindAttributes)(), void (*f
 		}
 	}
 
+	glhCheckError("d");
+
 	//bind attributes to shaders
-	fbindAttributes();
+	fbindAttributes(program);
+
+	glhCheckError("e");
 
 	//link the program
 	glLinkProgram(program->id);
+	glhCheckError("f");
 
 	{
 		char message[512];
@@ -211,11 +229,19 @@ void glhProgramLink(t_glh_program * program, void (*fbindAttributes)(), void (*f
 		}
 	}
 
+		glhCheckError("g");
+
+
+
 	//valide program
 	glValidateProgram(program->id);
 
+		glhCheckError("h");
+
 	//link uniforms
-	fLinkUniforms();
+	fLinkUniforms(program);
+
+	glhCheckError("z");
 }
 
 /** delete a program */
@@ -259,6 +285,72 @@ void glhProgramLoadUniformMatrix4f(int location, float * mat4) {
 int glhProgramGetUniform(t_glh_program * program, char * name) {
 	return (glGetUniformLocation(program->id, name));
 }
+
+// shaders
+void glhShaderDelete(GLuint shaderID) {
+	glDeleteShader(shaderID);
+}
+
+GLuint glhShaderLoad(char * filepath, GLenum type) {	
+
+	//read file to string
+	int fd = open(filepath, O_RDONLY);
+	if (fd < 0) {
+		puts("a");
+		return (-1);
+	}
+
+	static int buffsize = 4096;
+	char * source = (char*)malloc(sizeof(char) * buffsize);
+	if (source == NULL) {
+		puts("b");
+		return (-1);
+	}
+
+	int capacity = buffsize;
+	int length = 0;
+	int r;
+	while ((r = read(fd, source + length, buffsize)) > 0) {
+		length += r;
+		capacity += buffsize;
+		source = (char*)realloc(source, capacity);
+	}
+
+	if (length == capacity) {
+		source = (char*)realloc(source, length + 1);
+	}
+	source[length] = 0;
+
+	close(fd);
+
+	//create shader
+	GLuint shaderID = glCreateShader(type);
+	//add source
+	glShaderSource(shaderID, 1, (char const **)&source, &length);
+	//free the source file
+	free(source);
+
+	//compile
+	glCompileShader(shaderID);
+
+	//check compilation
+	GLint compiled = 0;
+	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &compiled);
+	if (compiled == GL_FALSE) {
+		GLint length = 0;
+		glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &length);
+
+		char buffer[length];
+		glGetShaderInfoLog(shaderID, length, &length, buffer);
+
+		glhShaderDelete(shaderID);
+
+		printf("shader compilation error: %s\n%s\n", filepath, buffer);
+		return (-1);
+	}
+	return (shaderID);
+}		
+
 
 // vao and vbo bindings
 GLuint glhVAOGen(void) {

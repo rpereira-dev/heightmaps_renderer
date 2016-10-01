@@ -13,6 +13,8 @@
 # include <stdio.h>
 # include <stdlib.h>
 # include <string.h>
+# include <fcntl.h>
+# include <unistd.h>
 
 # define GLH_WINDOW_EVENT_SCROLL (0)
 # define GLH_WINDOW_EVENT_MOUSE_CURSOR (1)
@@ -42,8 +44,8 @@ typedef struct	s_glh_context {
 # define GLH_SHADER_MAX_ID (4)
 
 typedef struct 	s_glh_program {
-	int id;
-	int shaders[GLH_SHADER_MAX_ID];
+	GLuint id;
+	GLuint shaders[GLH_SHADER_MAX_ID];
 }				t_glh_program;
 
 /** called to init opengl */
@@ -87,19 +89,22 @@ void glhClear(int bufferbits);
 void glhClearColor(float r, float g, float b, float a);
 
 /** program functions */
-t_glh_program * glhProgramNew(void);
-int glhProgramAddShader(t_glh_program * program, int shaderID, int shaderType);
-void glhProgramLink(t_glh_program * program, void (*fbindAttributes)(), void (*fLinkUniforms)());
-void glhProgramDelete(t_glh_program * program);
-void glhProgramUse(t_glh_program * program);
-void glhProgramBindAttribute(t_glh_program * program, int attribute, char * name);
-void glhProgramLoadUniformInteger(int location, int value);
-void glhProgramLoadUniformFloat(int location, float value);
-void glhProgramLoadUniformVec2(int location, float x, float y);
-void glhProgramLoadUniformVec3(int location, float x, float y, float z);
-void glhProgramLoadUniformVec4(int location, float x, float y, float z, float w);
-void glhProgramLoadUniformMatrix4f(int location, float * mat4);
-int glhProgramGetUniform(t_glh_program * program, char * name);
+t_glh_program *	glhProgramNew(void);
+int 			glhProgramAddShader(t_glh_program * program, GLuint shaderID, int shaderType);
+void 			glhProgramLink(t_glh_program * program, void (*fbindAttributes)(t_glh_program *), void (*fLinkUniforms)(t_glh_program *));
+void 			glhProgramDelete(t_glh_program * program);
+void			glhProgramUse(t_glh_program * program);
+void			glhProgramBindAttribute(t_glh_program * program, int attribute, char * name);
+void			glhProgramLoadUniformInteger(int location, int value);
+void 			glhProgramLoadUniformFloat(int location, float value);
+void 			glhProgramLoadUniformVec2(int location, float x, float y);
+void 			glhProgramLoadUniformVec3(int location, float x, float y, float z);
+void 			glhProgramLoadUniformVec4(int location, float x, float y, float z, float w);
+void 			glhProgramLoadUniformMatrix4f(int location, float * mat4);
+int 			glhProgramGetUniform(t_glh_program * program, char * name);
+
+void 	glhShaderDelete(GLuint shaderID);
+GLuint 	glhShaderLoad(char * filepath, GLenum type);
 
 //vao / vbo
 GLuint glhVAOGen(void);
