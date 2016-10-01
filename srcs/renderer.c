@@ -5,6 +5,7 @@ GLuint u_transf_matrix;
 
 static void rendererBindAttributes(t_glh_program * program) {
 	glhProgramBindAttribute(program, 0, "pos");
+	glhProgramBindAttribute(program, 1, "color");
 	//glhProgramBindAttribute(program, 1, "normal");
 	//glhProgramBindAttribute(program, 2, "color");
 }
@@ -49,15 +50,23 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	(void)renderer;
 	(void)camera;
 
+
+    //clear color buffer
+    glhClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	//bind the program
-	glhProgramBind(renderer->program);
+	glhProgramUse(renderer->program);
 
 	//load uniforms
-	glhProgramLoadUniformMatrix4f(program, u_mvp_matrix, camera->mvp_matrix);
-	
-	//for each terrains
-	
-	glhProgramLoadUniformMatrix4f(program, u_transf_matrix, camera->mvp_matrix);
+	glhProgramLoadUniformMatrix4f(u_mvp_matrix, (float*)&(camera->mviewproj));
 
-	glhProgramUnbind();
+	//for each terrains
+	HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
+		//TODO: render the terrain
+		(void)terrain;
+
+	}
+	HMAP_ITER_END(world->terrains, t_terrain *, terrain);
+
+	glhProgramUse(NULL);
 }

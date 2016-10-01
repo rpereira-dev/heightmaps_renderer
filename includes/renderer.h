@@ -44,7 +44,7 @@ typedef struct 	s_terrain {
 
 /** the world */
 typedef struct 	s_world {
-	t_hmap	* terrains;
+	t_hmap * terrains;
 }				t_world;
 
 /** the renderer part of the program */
@@ -66,6 +66,8 @@ void worldUpdate(t_world * world, t_camera * camera);
 //terrains
 t_terrain *	terrainNew(int gridX, int gridY);
 void 		terrainDelete(t_terrain * terrain);
+int 		terrainHash(t_terrain * terrain);
+int 		terrainCmp(t_terrain * left, t_terrain * right);
 void 		terrainGenerate(t_terrain * terrain);
 void		terrainLoadHeightMap(t_terrain * terrains, int * n, char const * bmpfile);
 

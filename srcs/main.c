@@ -80,9 +80,6 @@ int main(int argc, char **argv) {
 	printf("Loop started...\n");
     while (!glhWindowShouldClose(context->window)) {
 
-    	//clear color buffer
-    	glhClear(GL_COLOR_BUFFER_BIT);
-
     	//update the window
     	glhWindowUpdate(context->window);
 

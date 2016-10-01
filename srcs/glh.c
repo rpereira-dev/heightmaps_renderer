@@ -279,7 +279,7 @@ void glhProgramLoadUniformVec4(int location, float x, float y, float z, float w)
 }
 
 void glhProgramLoadUniformMatrix4f(int location, float * mat4) {
-	glUniformMatrix4fv(location, 16, 0, mat4);
+	glUniformMatrix4fv(location, 1, GL_FALSE, mat4);
 }
 
 int glhProgramGetUniform(t_glh_program * program, char * name) {

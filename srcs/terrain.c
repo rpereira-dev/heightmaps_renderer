@@ -1,5 +1,16 @@
 #include "renderer.h"
 
+int terrainHash(t_terrain * terrain) {
+	(void)terrain;
+	return (0);
+}
+
+int terrainCmp(t_terrain * left, t_terrain * right) {
+	(void)left;
+	(void)right;
+	return (1);
+}
+
 static int terrainGenerateHeightAt(int gridX, int gridY, int x, int y) {
 	//TODO PERLIN NOISE
 	(void)gridX;
