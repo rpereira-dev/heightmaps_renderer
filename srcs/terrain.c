@@ -66,10 +66,11 @@ static void terrainGenerateVertices(float vertices[TERRAIN_DETAIL * TERRAIN_FLOA
 }
 
 //update the vbo
-static void terrainUpdateVBO(t_terrain * terrain, float vertices[TERRAIN_DETAIL * TERRAIN_FLOAT_PER_VERTEX]) {
+static void terrainUpdateVBO(t_terrain * terrain, float vertices[TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX]) {
+
 	//bind it to gpu
-	glhVBOBind(terrain->vbo, GL_ARRAY_BUFFER, 0, 0);
-	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_FLOAT_PER_VERTEX * sizeof(float), vertices, GL_STATIC_DRAW);
+	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
+	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX, vertices, GL_STATIC_DRAW);
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 }
 
@@ -84,11 +85,12 @@ void terrainLoadHeightMap(t_terrain * terrains, int * n, char const * bmpfile) {
 
 void terrainGenerate(t_terrain * terrain) {
 
-	int gridX = terrain->gridX;
-	int gridY = terrain->gridY;
+	int gridX = terrain->index.x;
+	int gridY = terrain->index.y;
 
 	//generate model vertices
-	float vertices[TERRAIN_DETAIL * TERRAIN_FLOAT_PER_VERTEX];
+	float vertices[TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX];
+
 	terrainGenerateVertices(vertices, gridX, gridY, terrainGenerateHeightAt);
 
 	//update the vbo
@@ -104,8 +106,8 @@ t_terrain * terrainNew(int gridX, int gridY) {
 	if (terrain == NULL) {
 		return (NULL);
 	}
-	terrain->gridX = gridX;
-	terrain->gridY = gridY;
+
+	vec2i_set(&(terrain->index), gridX, gridY);
 
 	//allocate terrain model on GPU
 	terrain->vao = glhVAOGen();
@@ -113,7 +115,7 @@ t_terrain * terrainNew(int gridX, int gridY) {
 
 	//bind it to gpu
 	glhVAOBind(terrain->vao);
-	glhVBOBind(terrain->vbo, GL_ARRAY_BUFFER, 0, 0);
+	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
 	glhVAOSetAttribute(0, 3, GL_FLOAT, 0, 3 * sizeof(float), NULL);
 	glhVAOEnableAttribute(0);
 	glhVBOUnbind(GL_ARRAY_BUFFER);

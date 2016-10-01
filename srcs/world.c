@@ -1,21 +1,29 @@
 #include "renderer.h"
 
-static int worldVec3Cmp(int * a, int * b) {
-	return (a[0] == b[0] && a[1] == b[1] && a[2] == b[2]);
+static void worldSpawnTerrain(t_world * world, t_terrain * terrain) {
+	hmap_insert(world->terrains, terrain, terrain->index);
 }
 
 void worldInit(t_world * world) {
-	world->terrains = (t_hmap*)malloc(sizeof(t_hmap));
+	glhCheckError("pre worldInit()");
+
+	//create the terrain hash map
+	world->terrains = hmap_new(4096, (t_hf)terrainHash, (t_cmpf)vec2i_equals, (t_f)vec2i_delete, (t_f)terrainDelete);
 	if (world->terrains == NULL) {
 		fprintf(stderr, "world.c : l.10 : worldInit() : not enough memory\n");
 		return ;
 	}
-	
-	t_hmap terrains = hmap_new(4096, (t_hf)terrainHash, (t_cmpf)worldVec3Cmp, NULL, (t_f)terrainDelete);
-	memcpy(world->terrains, &terrains, sizeof(t_hmap));
+
+	//spawn terrain test
+	t_terrain * terrain = terrainNew(0, 0);
+	terrainGenerate(terrain);
+	worldSpawnTerrain(world, terrain);
+
+	glhCheckError("post worldInit()");
 }
 
 void worldDelete(t_world * world) {
+	hmap_delete(world->terrains);
 	free(world->terrains);
 }
 

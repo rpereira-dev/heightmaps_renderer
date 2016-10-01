@@ -194,12 +194,8 @@ int glhProgramAddShader(t_glh_program * program, GLuint shaderID, int shaderType
 /** link the program */
 void glhProgramLink(t_glh_program * program, void (*fbindAttributes)(t_glh_program *), void (*fLinkUniforms)(t_glh_program *)) {
 
-	glhCheckError("a");
-
 	//create a new program
 	program->id = glCreateProgram();
-
-	glhCheckError("b");
 
 	//for each shaders, attach it
 	int i;
@@ -209,16 +205,11 @@ void glhProgramLink(t_glh_program * program, void (*fbindAttributes)(t_glh_progr
 		}
 	}
 
-	glhCheckError("d");
-
 	//bind attributes to shaders
 	fbindAttributes(program);
 
-	glhCheckError("e");
-
 	//link the program
 	glLinkProgram(program->id);
-	glhCheckError("f");
 
 	{
 		char message[512];
@@ -229,19 +220,11 @@ void glhProgramLink(t_glh_program * program, void (*fbindAttributes)(t_glh_progr
 		}
 	}
 
-		glhCheckError("g");
-
-
-
 	//valide program
 	glValidateProgram(program->id);
 
-		glhCheckError("h");
-
 	//link uniforms
 	fLinkUniforms(program);
-
-	glhCheckError("z");
 }
 
 /** delete a program */
@@ -393,10 +376,14 @@ void glhVAOEnableAttribute(GLuint id) {
 	glEnableVertexAttribArray(id);
 }
 
-void glhVBOBind(GLuint target, GLuint vbo, GLintptr offset, GLintptr stride) {
-	glBindVertexBuffer(vbo, target, offset, stride);
+void glhVBOBind(GLuint target, GLuint vbo) {
+	glBindBuffer(target, vbo);
 }
 
 void glhVBOUnbind(GLuint target) {
-	glhVBOBind(target, 0, 0, 0);
+	glhVBOBind(target, 0);
+}
+
+void glhDraw(int dst, int begin, int vertex_count) {
+	glDrawArrays(dst, begin, vertex_count);
 }

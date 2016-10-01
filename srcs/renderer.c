@@ -31,6 +31,8 @@ void rendererInit(t_renderer * renderer) {
 
 	//enable depth test
 	glEnable(GL_DEPTH_TEST);
+
+	glhCheckError("post rendererInit()");
 }
 
 void rendererDelete(t_renderer * renderer) {
@@ -50,9 +52,9 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	(void)renderer;
 	(void)camera;
 
-
     //clear color buffer
     glhClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
 	//bind the program
 	glhProgramUse(renderer->program);
@@ -60,13 +62,25 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	//load uniforms
 	glhProgramLoadUniformMatrix4f(u_mvp_matrix, (float*)&(camera->mviewproj));
 
-	//for each terrains
 	HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
-		//TODO: render the terrain
-		(void)terrain;
+		//generate the transformation matrix
+		t_mat4f mat;
+		mat4f_identity(&mat);
 
+		//load the matrix as a uniform variable
+		glhProgramLoadUniformMatrix4f(u_transf_matrix, (float*)(&mat));
+
+		//bind the model
+		glhVAOBind(terrain->vao);
+
+		//draw it
+		glhDraw(GL_TRIANGLES, 0, TERRAIN_VERTEX_COUNT);
+
+
+		(void)terrain;
 	}
 	HMAP_ITER_END(world->terrains, t_terrain *, terrain);
 
+	glhVAOUnbind();
 	glhProgramUse(NULL);
 }

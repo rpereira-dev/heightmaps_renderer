@@ -68,14 +68,17 @@ int main(int argc, char **argv) {
 	t_renderer renderer;
 	t_camera camera;
 
-	printf("Initializing world...\n");
-	worldInit(&world);
 	printf("Initializing camera...\n");
 	cameraInit(&camera);
+
 	printf("Initializing renderer...\n");
 	rendererInit(&renderer);
+
 	printf("Initializing inputs...\n");
 	inputInit(context);
+
+	printf("Initializing world...\n");
+	worldInit(&world);
 
 	printf("Loop started...\n");
     while (!glhWindowShouldClose(context->window)) {
@@ -90,10 +93,6 @@ int main(int argc, char **argv) {
     	//update the renderer
     	rendererUpdate(context, &world, &renderer, &camera);
     	glhCheckError("post rendererUpdate()");
-
-    	//render (update the frame)
-    	rendererRender(context, &world, &renderer, &camera);
-    	glhCheckError("post rendererRender()");
 
     	//swap buffers
     	glhSwapBuffer(context->window);

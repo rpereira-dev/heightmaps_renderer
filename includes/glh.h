@@ -121,7 +121,9 @@ void glhVBOData(GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usag
 void glhVAOSetAttribute(GLuint attributeID, GLint length, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * offset);
 void glhVAOEnableAttribute(GLuint id);
 
-void glhVBOBind(GLuint target, GLuint vbo, GLintptr offset, GLintptr stride);
+void glhVBOBind(GLuint target, GLuint vbo);
 void glhVBOUnbind(GLenum target);
+
+void glhDraw(int dst, int begin, int vertex_count);
 
 #endif
