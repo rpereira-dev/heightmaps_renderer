@@ -1,7 +1,7 @@
 #include "renderer.h"
 
 static void worldSpawnTerrain(t_world * world, t_terrain * terrain) {
-	hmap_insert(world->terrains, terrain, terrain->index);
+	hmap_insert(world->terrains, terrain, &(terrain->index));
 }
 
 void worldInit(t_world * world) {
