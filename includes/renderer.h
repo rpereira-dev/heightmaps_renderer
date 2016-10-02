@@ -14,6 +14,7 @@
 /** the camera data structures */
 typedef struct	s_camera {
 	t_vec3f	pos;
+	t_vec3f	rot;
 	float	fov;
 	float 	near_distance;
 	float	far_distance;

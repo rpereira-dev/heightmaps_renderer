@@ -48,13 +48,9 @@ void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * rende
 
 void rendererRender(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
 	(void)context;
-	(void)world;
-	(void)renderer;
-	(void)camera;
 
     //clear color buffer
     glhClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
 	//bind the program
 	glhProgramUse(renderer->program);
@@ -76,8 +72,6 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 		//draw it
 		glhDraw(GL_TRIANGLES, 0, TERRAIN_VERTEX_COUNT);
 
-
-		(void)terrain;
 	}
 	HMAP_ITER_END(world->terrains, t_terrain *, terrain);
 

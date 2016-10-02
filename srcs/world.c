@@ -15,9 +15,16 @@ void worldInit(t_world * world) {
 	}
 
 	//spawn terrain test
-	t_terrain * terrain = terrainNew(0, 0);
-	terrainGenerate(terrain);
-	worldSpawnTerrain(world, terrain);
+	t_terrain * terrain;
+
+	int i, j;
+	for (i = -8 ; i < 8; i++) {
+		for (j = -8 ; j < 8; j++) {
+			terrain = terrainNew(i, j);
+			terrainGenerate(terrain);
+			worldSpawnTerrain(world, terrain);
+		}
+	}
 
 	glhCheckError("post worldInit()");
 }
