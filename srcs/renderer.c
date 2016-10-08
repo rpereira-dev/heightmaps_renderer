@@ -58,10 +58,15 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	//load uniforms
 	glhProgramLoadUniformMatrix4f(u_mvp_matrix, (float*)&(camera->mviewproj));
 
+	//debug
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 	HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
 		//generate the transformation matrix
-		t_mat4f mat;
+		static t_mat4f mat;
 		mat4f_identity(&mat);
+		mat4f_translate(&mat, &mat, terrain->index.x * TERRAIN_SIZE, 0, terrain->index.y * TERRAIN_SIZE);
+		mat4f_scale(&mat, &mat, TERRAIN_SIZE);
 
 		//load the matrix as a uniform variable
 		glhProgramLoadUniformMatrix4f(u_transf_matrix, (float*)(&mat));
@@ -71,7 +76,6 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 
 		//draw it
 		glhDraw(GL_TRIANGLES, 0, TERRAIN_VERTEX_COUNT);
-
 	}
 	HMAP_ITER_END(world->terrains, t_terrain *, terrain);
 

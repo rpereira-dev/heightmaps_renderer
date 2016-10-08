@@ -15,6 +15,7 @@
 typedef struct	s_camera {
 	t_vec3f	pos;
 	t_vec3f	rot;
+	t_vec3f vview;
 	float	fov;
 	float 	near_distance;
 	float	far_distance;
@@ -31,7 +32,7 @@ typedef struct	s_camera {
 //float per vertices, i.e, (x, y, z)
 # define TERRAIN_FLOAT_PER_VERTEX (3)
 //terrain width (and height)
-# define TERRAIN_SIZE (256)
+# define TERRAIN_SIZE (64)
 
 /** a terrain */
 typedef struct 	s_terrain {
@@ -76,5 +77,6 @@ void cameraUpdate(t_camera * camera);
 
 //inputs
 void inputInit(t_glh_context * context);
+void inputUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera);
 
 #endif

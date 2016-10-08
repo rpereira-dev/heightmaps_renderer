@@ -86,12 +86,19 @@ int main(int argc, char **argv) {
     	//update the window
     	glhWindowUpdate(context->window);
 
+    	//input
+    	inputUpdate(context, &world, &renderer, &camera);
+    	
     	//update the camera and the world
     	cameraUpdate(&camera);
     	worldUpdate(&world, &camera);
 
     	//update the renderer
     	rendererUpdate(context, &world, &renderer, &camera);
+
+    	//render
+    	rendererRender(context, &world, &renderer, &camera);
+    	
     	glhCheckError("post rendererUpdate()");
 
     	//swap buffers

@@ -11,7 +11,7 @@ int terrainCmp(t_terrain * left, t_terrain * right) {
 	return (1);
 }
 
-static int terrainGenerateHeightAt(int gridX, int gridY, int x, int y) {
+static float terrainGenerateHeightAt(int gridX, int gridY, int x, int y) {
 	//TODO PERLIN NOISE
 	(void)gridX;
 	(void)gridY;
@@ -20,47 +20,70 @@ static int terrainGenerateHeightAt(int gridX, int gridY, int x, int y) {
 	return (0);
 }
 
-static void terrainGenerateVertices(float vertices[TERRAIN_DETAIL * TERRAIN_FLOAT_PER_VERTEX], int gridX, int gridY, int (*heightGen)(int, int, int, int)) {
-		//generate the model
+static void terrainGenerateVertices(float vertices[TERRAIN_DETAIL * TERRAIN_FLOAT_PER_VERTEX], int gridX, int gridY, float (*heightGen)(int, int, int, int)) {
+	
+/*
+	vertices[0] = 0.0f;
+	vertices[1] = 0.0f;
+	vertices[2] = 0.0f;
+
+	vertices[3] = 1.0f;
+	vertices[4] = 0.0f;
+	vertices[5] = 0.0f;
+
+	vertices[6] = 1.0f;
+	vertices[7] = 1.0f;
+	vertices[8] = 0.0f;
+
+	return ;
+*/
+
+	//generate the model
+	static float unit = 1 / (float)(TERRAIN_DETAIL - 1);
+
 	int x, z;
+
+	float xf, zf;
+	float y00, y10, y01, y11;
 
 	int i = 0;
 	for (x = 0 ; x < TERRAIN_DETAIL - 1; x++) {
 		for (z = 0 ; z < TERRAIN_DETAIL - 1; z++) {
 
-			//height generation
-			int y00, y10, y01, y11;
+			xf = (float)x;
+			zf = (float)z;
 
+			//height generation
 			y00 = heightGen(gridX, gridY, x + 0, z + 0);
 			y10 = heightGen(gridX, gridY, x + 1, z + 0);
 			y01 = heightGen(gridX, gridY, x + 0, z + 1);
 			y11 = heightGen(gridX, gridY, x + 1, z + 1);
 
 			//first triangle
-			vertices[i++] = x;
-			vertices[i++] = y00;
-			vertices[i++] = z;
+			vertices[i++] = xf * unit;
+			vertices[i++] = y00 * unit;
+			vertices[i++] = zf * unit;
 
-			vertices[i++] = x + 1;
-			vertices[i++] = y10;
-			vertices[i++] = z;
+			vertices[i++] = (xf + 1.0f) * unit;
+			vertices[i++] = y10 * unit;
+			vertices[i++] = zf * unit;
 
-			vertices[i++] = x;
-			vertices[i++] = y01;
-			vertices[i++] = z + 1;
+			vertices[i++] = xf * unit;
+			vertices[i++] = y01 * unit;
+			vertices[i++] = (zf + 1.0f) * unit;
 
 			//second triangle
-			vertices[i++] = x + 1;
-			vertices[i++] = y10;
-			vertices[i++] = z;
+			vertices[i++] = (xf + 1.0f) * unit;
+			vertices[i++] = y10 * unit;
+			vertices[i++] = zf * unit;
 
-			vertices[i++] = x + 1;
-			vertices[i++] = y11;
-			vertices[i++] = z + 1;
+			vertices[i++] = (xf + 1.0f) * unit;
+			vertices[i++] = y11 * unit;
+			vertices[i++] = (zf + 1.0f) * unit;
 
-			vertices[i++] = x;
-			vertices[i++] = y01;
-			vertices[i++] = z + 1;
+			vertices[i++] = xf * unit;
+			vertices[i++] = y01 * unit;
+			vertices[i++] = (zf + 1.0f) * unit;
 		}
 	}
 }
@@ -70,7 +93,8 @@ static void terrainUpdateVBO(t_terrain * terrain, float vertices[TERRAIN_VERTEX_
 
 	//bind it to gpu
 	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX, vertices, GL_STATIC_DRAW);
+	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX * sizeof(float), vertices, GL_STATIC_DRAW);
+	//glhVBOData(GL_ARRAY_BUFFER, 9 * sizeof(float), vertices, GL_STATIC_DRAW);
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 }
 
@@ -107,7 +131,8 @@ t_terrain * terrainNew(int gridX, int gridY) {
 		return (NULL);
 	}
 
-	vec2i_set(&(terrain->index), gridX, gridY);
+	terrain->index.x = gridX;
+	terrain->index.y = gridY;
 
 	//allocate terrain model on GPU
 	terrain->vao = glhVAOGen();

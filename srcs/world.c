@@ -26,6 +26,7 @@ void worldInit(t_world * world) {
 		}
 	}
 
+
 	glhCheckError("post worldInit()");
 }
 
