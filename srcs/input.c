@@ -112,7 +112,7 @@ static void inputUpdateCamera(t_camera * camera) {
 
 	//rotation
 	camera->rot.pitch += ((win->mouseY - win->prev_mouseY) * 0.3f * rotspeed);
-	camera->rot.yaw += ((win->mouseX - win->prev_mouseX) * 0.3f * rotspeed);
+	camera->rot.yaw += -((win->mouseX - win->prev_mouseX) * 0.3f * rotspeed);
 
 	//move
 	if (glfwGetKey(win->pointer, GLFW_KEY_W) == GLFW_PRESS) {

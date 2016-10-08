@@ -12,16 +12,20 @@ int terrainCmp(t_terrain * left, t_terrain * right) {
 }
 
 static float terrainGenerateHeightAt(int gridX, int gridY, int x, int y) {
-	//TODO PERLIN NOISE
-	(void)gridX;
-	(void)gridY;
-	(void)x;
-	(void)y;
-	return (0);
+
+	static t_noise2 * noise = NULL;
+
+	if (noise == NULL) {
+		noise = noise2New();
+	}
+
+	float px = (x + gridX * (TERRAIN_DETAIL - 1)) * 0.02f;
+	float py = (y + gridY * (TERRAIN_DETAIL - 1)) * 0.02f;
+	return (noise2(noise, px, py) * 8.0f);
 }
 
 static void terrainGenerateVertices(float vertices[TERRAIN_DETAIL * TERRAIN_FLOAT_PER_VERTEX], int gridX, int gridY, float (*heightGen)(int, int, int, int)) {
-	
+
 /*
 	vertices[0] = 0.0f;
 	vertices[1] = 0.0f;
@@ -32,8 +36,20 @@ static void terrainGenerateVertices(float vertices[TERRAIN_DETAIL * TERRAIN_FLOA
 	vertices[5] = 0.0f;
 
 	vertices[6] = 1.0f;
-	vertices[7] = 1.0f;
-	vertices[8] = 0.0f;
+	vertices[7] = 0.0f;
+	vertices[8] = 1.0f;
+
+	vertices[9] = 0.0f;
+	vertices[10] = 0.0f;
+	vertices[11] = 0.0f;
+
+	vertices[12] = 1.0f;
+	vertices[13] = 0.0f;
+	vertices[14] = 1.0f;
+
+	vertices[15] = 0.0f;
+	vertices[16] = 0.0f;
+	vertices[17] = 1.0f;
 
 	return ;
 */
@@ -94,7 +110,7 @@ static void terrainUpdateVBO(t_terrain * terrain, float vertices[TERRAIN_VERTEX_
 	//bind it to gpu
 	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
 	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX * sizeof(float), vertices, GL_STATIC_DRAW);
-	//glhVBOData(GL_ARRAY_BUFFER, 9 * sizeof(float), vertices, GL_STATIC_DRAW);
+	//glhVBOData(GL_ARRAY_BUFFER, 18 * sizeof(float), vertices, GL_STATIC_DRAW);
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 }
 
