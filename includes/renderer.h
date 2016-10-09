@@ -27,11 +27,15 @@ typedef struct	s_camera {
 }				t_camera;
 
 //terrain detail (number of vertex per line)
-# define TERRAIN_DETAIL (64)
-// number of vertex per terrain
-# define TERRAIN_VERTEX_COUNT ((TERRAIN_DETAIL - 1) * (TERRAIN_DETAIL - 1) * 6)
+# define TERRAIN_DETAIL (16)
 //float per vertices, i.e, (x, y, z)
 # define TERRAIN_FLOAT_PER_VERTEX (3)
+//number of vertices
+# define TERRAIN_VERTEX_COUNT (TERRAIN_DETAIL * TERRAIN_DETAIL)
+//number of triangles
+# define TERRAIN_TRIANGLE_COUNT (TERRAIN_DETAIL * TERRAIN_DETAIL * 2)
+//number of indices
+# define TERRAIN_INDICES_COUNT ((TERRAIN_DETAIL - 1) * (TERRAIN_DETAIL - 1) * 6)
 //terrain width (and height)
 # define TERRAIN_SIZE (64)
 
@@ -46,11 +50,13 @@ typedef struct 	s_terrain {
 typedef struct 	s_world {
 	t_hmap *	terrains;
 	t_noise2 *	noise;
+	float 		terrain_default_vertices[TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX];
 }				t_world;
 
 /** the renderer part of the program */
 typedef struct 	s_renderer {
-	t_glh_program * program;
+	t_glh_program	* program;
+	GLuint 			terrain_indices;
 }				t_renderer;
 
 //renderer related functions

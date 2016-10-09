@@ -4,6 +4,19 @@ static void worldSpawnTerrain(t_world * world, t_terrain * terrain) {
 	hmap_insert(world->terrains, terrain, &(terrain->index));
 }
 
+static void worldTerrainGenerateDefaultVertices(t_world * world) {
+	float unit = 1 / (float)(TERRAIN_DETAIL - 1);
+	int x, z;
+	int i = 0;
+	for (x = 0 ; x < TERRAIN_DETAIL - 1; x++) {
+		for (z = 0 ; z < TERRAIN_DETAIL - 1; z++) {
+			world->terrain_default_vertices[i++] = x * unit;
+			world->terrain_default_vertices[i++] = 0;
+			world->terrain_default_vertices[i++] = z * unit;
+		}
+	}
+}
+
 void worldInit(t_world * world) {
 	glhCheckError("pre worldInit()");
 
@@ -14,10 +27,13 @@ void worldInit(t_world * world) {
 		return ;
 	}
 
-	//noise
+	//generate default terrain vertices which will be copy on each terrain generation
+	worldTerrainGenerateDefaultVertices(world);
+
+	//noise creation
 	world->noise = noise2New();
 
-	//spawn terrain test
+	//TESTS
 	t_terrain * terrain;
 
 	int i, j;

@@ -387,3 +387,7 @@ void glhVBOUnbind(GLuint target) {
 void glhDraw(int dst, int begin, int vertex_count) {
 	glDrawArrays(dst, begin, vertex_count);
 }
+
+void glhDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices) {
+	glhDrawElements(mode, count, type, indices);
+}

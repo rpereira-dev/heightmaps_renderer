@@ -15,6 +15,26 @@ static void rendererLinkUniforms(t_glh_program * program) {
 	u_transf_matrix = glhProgramGetUniform(program, "transf_matrix");
 }
 
+static void rendererGenerateTerrainIndices(unsigned int indices[]) {
+	int x, z;
+	int i00, i01, i11, i10;
+	int i = 0;
+	for (x = 0 ; x < TERRAIN_DETAIL - 1; x++) {
+		for (z = 0 ; z < TERRAIN_DETAIL - 1; z++) {
+			i00 = x * TERRAIN_DETAIL + z;
+			i01 = i00 + 1;
+			i10 = (x + 1) * TERRAIN_DETAIL + z;
+			i11 = i10 + 1;
+			indices[i++] = i00;
+			indices[i++] = i10;
+			indices[i++] = i01;
+			indices[i++] = i01;
+			indices[i++] = i10;
+			indices[i++] = i11;
+		}
+	}
+}
+
 void rendererInit(t_renderer * renderer) {
 
 	//create the program
@@ -32,11 +52,19 @@ void rendererInit(t_renderer * renderer) {
 	//enable depth test
 	glEnable(GL_DEPTH_TEST);
 
+	//generate terrain indices
+	unsigned int indices[TERRAIN_INDICES_COUNT];
+	rendererGenerateTerrainIndices(indices);
+	renderer->terrain_indices = glhVBOGen();
+	glhVBOBind(GL_ELEMENT_ARRAY_BUFFER, renderer->terrain_indices);
+	glhVBOData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glhVBOUnbind(GL_ELEMENT_ARRAY_BUFFER);
 	glhCheckError("post rendererInit()");
 }
 
 void rendererDelete(t_renderer * renderer) {
 	glhProgramDelete(renderer->program);
+	glhVBODelete(renderer->terrain_indices);
 }
 
 void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
@@ -74,8 +102,12 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 		//bind the model
 		glhVAOBind(terrain->vao);
 
+		//bind indices
+		//glhVBOBind(GL_ELEMENT_ARRAY_BUFFER, renderer->terrain_indices);
+
 		//draw it
-		glhDraw(GL_TRIANGLES, 0, TERRAIN_VERTEX_COUNT);
+		glhDraw(GL_TRIANGLES, 0, TERRAIN_INDICES_COUNT);
+		//glhDrawElements(GL_TRIANGLES, TERRAIN_VERTEX_COUNT, GL_UNSIGNED_INT, NULL);
 	}
 	HMAP_ITER_END(world->terrains, t_terrain *, terrain);
 

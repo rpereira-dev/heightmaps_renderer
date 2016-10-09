@@ -41,8 +41,9 @@ static float terrainGenerateHeightAt(t_world * world, int gridX, int gridY, int 
 	return (height * height_ratio);
 }
 
-static void terrainGenerateVertices(t_world * world, float vertices[TERRAIN_DETAIL * TERRAIN_FLOAT_PER_VERTEX],
-										int gridX, int gridY, float (*heightGen)(t_world *, int, int, int, int)) {
+
+static void terrainGenerateVertices(t_world * world, float vertices[], int gridX, int gridY,
+										float (*heightGen)(t_world *, int, int, int, int)) {
 
 	//generate the model
 	static float unit = 1 / (float)(TERRAIN_DETAIL - 1);
@@ -111,13 +112,28 @@ static void terrainGenerateVertices(t_world * world, float vertices[TERRAIN_DETA
 	}
 }
 
+/*
+static void terrainGenerateVertices(t_world * world, float vertices[], int gridX, int gridY,
+									float (*heightGen)(t_world *, int, int, int, int)) {
+	int x, z;
+
+	int i = 1;
+	for (x = 0 ; x < TERRAIN_DETAIL - 1; x++) {
+		for (z = 0 ; z < TERRAIN_DETAIL - 1; z++) {
+			vertices[i] = heightGen(world, gridX, gridY, x, z);
+			i += 3;
+		}
+	}
+}
+*/
+
 //update the vbo
-static void terrainUpdateVBO(t_terrain * terrain, float vertices[TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX]) {
+static void terrainUpdateVBO(t_terrain * terrain, float vertices[]) {
 
 	//bind it to gpu
 	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX * sizeof(float), vertices, GL_STATIC_DRAW);
-	//glhVBOData(GL_ARRAY_BUFFER, 18 * sizeof(float), vertices, GL_STATIC_DRAW);
+	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_INDICES_COUNT * TERRAIN_FLOAT_PER_VERTEX * sizeof(float), vertices, GL_STATIC_DRAW);
+	//glhVBOData(GL_ARRAY_BUFFER, TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX * sizeof(float), vertices, GL_STATIC_DRAW);
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 }
 
@@ -132,12 +148,18 @@ void terrainLoadHeightMap(t_terrain * terrains, int * n, char const * bmpfile) {
 
 void terrainGenerate(t_world * world, t_terrain * terrain) {
 
+	//the world's terrain index
 	int gridX = terrain->index.x;
 	int gridY = terrain->index.y;
 
 	//generate model vertices
-	float vertices[TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX];
+	//float vertices[TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX];
+	//set default vertices
+	//memcpy(vertices, world->terrain_default_vertices, sizeof(vertices));
 
+	float vertices[TERRAIN_INDICES_COUNT * TERRAIN_FLOAT_PER_VERTEX];
+
+	//generate heightmap
 	terrainGenerateVertices(world, vertices, gridX, gridY, terrainGenerateHeightAt);
 
 	//update the vbo

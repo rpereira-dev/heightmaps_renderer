@@ -125,5 +125,6 @@ void glhVBOBind(GLuint target, GLuint vbo);
 void glhVBOUnbind(GLenum target);
 
 void glhDraw(int dst, int begin, int vertex_count);
+void glhDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices);
 
 #endif
