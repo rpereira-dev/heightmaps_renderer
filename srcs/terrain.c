@@ -11,95 +11,102 @@ int terrainCmp(t_terrain * left, t_terrain * right) {
 	return (1);
 }
 
-static float terrainGenerateHeightAt(int gridX, int gridY, int x, int y) {
-
-	static t_noise2 * noise = NULL;
-
-	if (noise == NULL) {
-		noise = noise2New();
+/*
+float clamp(float val, float min, float max) {
+	if (val > max) {
+		return (max);
 	}
+    return (val < min ? min : val);
+}
+*/
 
-	float px = (x + gridX * (TERRAIN_DETAIL - 1)) * 0.02f;
-	float py = (y + gridY * (TERRAIN_DETAIL - 1)) * 0.02f;
-	return (noise2(noise, px, py) * 8.0f);
+static float terrainGenerateHeightAt(t_world * world, int gridX, int gridY, int x, int y) {
+
+	static float height_ratio = TERRAIN_SIZE / 128.0f;
+	static int layers = 8;
+	static int layerf = 3.5f;
+	static int weightf = 0.9f;
+
+	float layer = 0.009f;
+	float weight = 1.0f;
+	float height = 0;
+	int i;
+	for (i = 0 ; i < layers ; i++) {
+		float posx = gridX * (TERRAIN_DETAIL - 1) + x;
+		float posy = gridY * (TERRAIN_DETAIL - 1) + y;
+		height += noise2(world->noise, posx * layer, posy * layer) * weight;
+	    layer *= layerf;
+	    weight *= weightf;
+	}
+	return (height * height_ratio);
 }
 
-static void terrainGenerateVertices(float vertices[TERRAIN_DETAIL * TERRAIN_FLOAT_PER_VERTEX], int gridX, int gridY, float (*heightGen)(int, int, int, int)) {
-
-/*
-	vertices[0] = 0.0f;
-	vertices[1] = 0.0f;
-	vertices[2] = 0.0f;
-
-	vertices[3] = 1.0f;
-	vertices[4] = 0.0f;
-	vertices[5] = 0.0f;
-
-	vertices[6] = 1.0f;
-	vertices[7] = 0.0f;
-	vertices[8] = 1.0f;
-
-	vertices[9] = 0.0f;
-	vertices[10] = 0.0f;
-	vertices[11] = 0.0f;
-
-	vertices[12] = 1.0f;
-	vertices[13] = 0.0f;
-	vertices[14] = 1.0f;
-
-	vertices[15] = 0.0f;
-	vertices[16] = 0.0f;
-	vertices[17] = 1.0f;
-
-	return ;
-*/
+static void terrainGenerateVertices(t_world * world, float vertices[TERRAIN_DETAIL * TERRAIN_FLOAT_PER_VERTEX],
+										int gridX, int gridY, float (*heightGen)(t_world *, int, int, int, int)) {
 
 	//generate the model
 	static float unit = 1 / (float)(TERRAIN_DETAIL - 1);
 
-	int x, z;
-
-	float xf, zf;
 	float y00, y10, y01, y11;
+	float px00, py00, pz00;
+	float px10, py10, pz10;
+	float px01, py01, pz01;
+	float px11, py11, pz11;
+
+	int x, z;
 
 	int i = 0;
 	for (x = 0 ; x < TERRAIN_DETAIL - 1; x++) {
 		for (z = 0 ; z < TERRAIN_DETAIL - 1; z++) {
 
-			xf = (float)x;
-			zf = (float)z;
-
 			//height generation
-			y00 = heightGen(gridX, gridY, x + 0, z + 0);
-			y10 = heightGen(gridX, gridY, x + 1, z + 0);
-			y01 = heightGen(gridX, gridY, x + 0, z + 1);
-			y11 = heightGen(gridX, gridY, x + 1, z + 1);
+			y00 = heightGen(world, gridX, gridY, x + 0, z + 0);
+			y10 = heightGen(world, gridX, gridY, x + 1, z + 0);
+			y01 = heightGen(world, gridX, gridY, x + 0, z + 1);
+			y11 = heightGen(world, gridX, gridY, x + 1, z + 1);
+
+			//position vertices
+			px00 = (float)x * unit;
+			py00 = y00;
+			pz00 = (float)z * unit;
+
+			px10 = ((float)x + 1.0f) * unit;
+			py10 = y10;
+			pz10 = pz00;
+
+			px01 = px10;
+			py01 = y01;
+			pz01 = ((float)z + 1.0f) * unit;
+
+			px11 = px10;
+			py11 = y11;
+			pz11 = pz01;
 
 			//first triangle
-			vertices[i++] = xf * unit;
-			vertices[i++] = y00 * unit;
-			vertices[i++] = zf * unit;
+			vertices[i++] = px00;
+			vertices[i++] = py00;
+			vertices[i++] = pz00;
 
-			vertices[i++] = (xf + 1.0f) * unit;
-			vertices[i++] = y10 * unit;
-			vertices[i++] = zf * unit;
+			vertices[i++] = px10;
+			vertices[i++] = py10;
+			vertices[i++] = pz10;
 
-			vertices[i++] = xf * unit;
-			vertices[i++] = y01 * unit;
-			vertices[i++] = (zf + 1.0f) * unit;
+			vertices[i++] = px11;
+			vertices[i++] = py11;
+			vertices[i++] = pz11;
 
 			//second triangle
-			vertices[i++] = (xf + 1.0f) * unit;
-			vertices[i++] = y10 * unit;
-			vertices[i++] = zf * unit;
+			vertices[i++] = px00;
+			vertices[i++] = py00;
+			vertices[i++] = pz00;
 
-			vertices[i++] = (xf + 1.0f) * unit;
-			vertices[i++] = y11 * unit;
-			vertices[i++] = (zf + 1.0f) * unit;
+			vertices[i++] = px11;
+			vertices[i++] = py11;
+			vertices[i++] = pz11;
 
-			vertices[i++] = xf * unit;
-			vertices[i++] = y01 * unit;
-			vertices[i++] = (zf + 1.0f) * unit;
+			vertices[i++] = px01;
+			vertices[i++] = py01;
+			vertices[i++] = pz01;
 		}
 	}
 }
@@ -123,7 +130,7 @@ void terrainLoadHeightMap(t_terrain * terrains, int * n, char const * bmpfile) {
 	//TODO
 }
 
-void terrainGenerate(t_terrain * terrain) {
+void terrainGenerate(t_world * world, t_terrain * terrain) {
 
 	int gridX = terrain->index.x;
 	int gridY = terrain->index.y;
@@ -131,7 +138,7 @@ void terrainGenerate(t_terrain * terrain) {
 	//generate model vertices
 	float vertices[TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX];
 
-	terrainGenerateVertices(vertices, gridX, gridY, terrainGenerateHeightAt);
+	terrainGenerateVertices(world, vertices, gridX, gridY, terrainGenerateHeightAt);
 
 	//update the vbo
 	terrainUpdateVBO(terrain, vertices);

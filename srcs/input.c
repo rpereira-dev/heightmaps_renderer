@@ -101,7 +101,7 @@ static void inputUpdateDebug(t_glh_context * context, t_world * world, t_rendere
 
 static void inputUpdateCamera(t_camera * camera) {
 
-	static float movespeed = 1.0f;
+	static float movespeed = 4.0f;
 	static float rotspeed = 1.0f;
 
 	t_glh_window * win = glhGetWindow();
@@ -120,15 +120,35 @@ static void inputUpdateCamera(t_camera * camera) {
 		camera->pos.y += camera->vview.y * movespeed;
 		camera->pos.z += camera->vview.z * movespeed;
 	} else if (glfwGetKey(win->pointer, GLFW_KEY_S) == GLFW_PRESS) {
-		camera->pos.x -= camera->vview.x * movespeed;
-		camera->pos.y -= camera->vview.y * movespeed;
-		camera->pos.z -= camera->vview.z * movespeed;
+		camera->pos.x += -camera->vview.x * movespeed;
+		camera->pos.y += -camera->vview.y * movespeed;
+		camera->pos.z += -camera->vview.z * movespeed;
+	}
+
+	if (glfwGetKey(win->pointer, GLFW_KEY_A) == GLFW_PRESS) {
+		camera->pos.x += -camera->vview.z * movespeed;
+		camera->pos.z += camera->vview.x * movespeed;
+	}
+	else if (glfwGetKey(win->pointer, GLFW_KEY_D) == GLFW_PRESS) {
+		camera->pos.x += camera->vview.z * movespeed;
+		camera->pos.z += -camera->vview.x * movespeed;
+	}
+}
+
+static void inputUpdateWorld(t_glh_window * win, t_world * world) {
+	if (glfwGetKey(win->pointer, GLFW_KEY_P) == GLFW_PRESS) {
+		noise2Seed(world->noise, time(NULL));
+		HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
+			terrainGenerate(world, terrain);
+		}
+		HMAP_ITER_END(world->terrains, t_terrain *, terrain);
 	}
 }
 
 void inputUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
 	inputUpdateCamera(camera);
 	inputUpdateDebug(context, world, renderer, camera);
+	inputUpdateWorld(context->window, world);
 }
 
 void inputInit(t_glh_context * context) {

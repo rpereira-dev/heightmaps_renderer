@@ -14,14 +14,17 @@ void worldInit(t_world * world) {
 		return ;
 	}
 
+	//noise
+	world->noise = noise2New();
+
 	//spawn terrain test
 	t_terrain * terrain;
 
 	int i, j;
-	for (i = -8 ; i < 8; i++) {
-		for (j = -8 ; j < 8; j++) {
+	for (i = 0 ; i < 8; i++) {
+		for (j = 0 ; j < 8; j++) {
 			terrain = terrainNew(i, j);
-			terrainGenerate(terrain);
+			terrainGenerate(world, terrain);
 			worldSpawnTerrain(world, terrain);
 		}
 	}
@@ -33,6 +36,7 @@ void worldInit(t_world * world) {
 void worldDelete(t_world * world) {
 	hmap_delete(world->terrains);
 	free(world->terrains);
+	noise2Delete(world->noise);
 }
 
 void worldUpdate(t_world * world, t_camera * camera) {
