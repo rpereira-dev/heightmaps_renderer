@@ -34,6 +34,8 @@ typedef struct	s_camera {
 # define TERRAIN_RENDER_DISTANCE (4)
 // distance where terrain are kept loaded in memory
 # define TERRAIN_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE * 2)
+// distance where terrain are kept loaded in memory
+# define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_LOADED_DISTANCE * 2)
 
 /** a terrain */
 typedef struct 	s_terrain {
@@ -69,7 +71,7 @@ void 		worldDelete(t_world * world);
 void 		worldUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera);
 void 		worldGetGridIndex(t_world * world, float worldX, float worldZ, int * gridX, int * gridY);
 t_terrain * worldGetTerrain(t_world * world, int gridX, int gridY);
-
+void		worldRemoveTerrain(t_world * world, t_terrain * terrain);
 //terrains
 t_terrain *	terrainNew(t_renderer * renderer, int gridX, int gridY);
 void 		terrainDelete(t_terrain * terrain);

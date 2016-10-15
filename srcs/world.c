@@ -1,14 +1,10 @@
 #include "renderer.h"
 
-static void worldSpawnTerrain(t_world * world, t_terrain * terrain) {
-	hmap_insert(world->terrains, terrain, &(terrain->index));
-}
-
 void worldInit(t_world * world) {
 	glhCheckError("pre worldInit()");
 
 	//create the terrain hash map
-	world->terrains = hmap_new(4096, (t_hf)vec2i_hash, (t_cmpf)vec2i_nequals, (t_f)vec2i_delete, (t_f)terrainDelete);
+	world->terrains = hmap_new(4096, (t_hf)vec2i_hash, (t_cmpf)vec2i_nequals, (t_f)NULL, (t_f)NULL);
 	if (world->terrains == NULL) {
 		fprintf(stderr, "world.c : l.10 : worldInit() : not enough memory\n");
 		return ;
@@ -54,6 +50,15 @@ t_terrain * worldGetTerrain(t_world * world, int gridX, int gridY) {
 	return (hmap_get(world->terrains, &index));
 }
 
+void worldRemoveTerrain(t_world * world, t_terrain * terrain) {
+	hmap_remove_key(world->terrains, &(terrain->index));
+	terrainDelete(terrain);
+}
+
+static void worldSpawnTerrain(t_world * world, t_terrain * terrain) {
+	hmap_insert(world->terrains, terrain, &(terrain->index));
+}
+
 static void worldLoadNewTerrains(t_world * world, t_renderer * renderer, t_camera * camera) {
 	int indexx = camera->terrain_index.x - TERRAIN_LOADED_DISTANCE;
 	int indexy = camera->terrain_index.y - TERRAIN_LOADED_DISTANCE;
@@ -63,7 +68,6 @@ static void worldLoadNewTerrains(t_world * world, t_renderer * renderer, t_camer
 	for (gridX = indexx ; gridX  < maxx; gridX++) {
 		for (gridY = indexy ; gridY < maxy; gridY++) {
 			if (worldGetTerrain(world, gridX, gridY) == NULL) {
-				printf("spawning at: %d %d\n", gridX, gridY);
 				t_terrain * terrain = terrainNew(renderer, gridX, gridY);
 				terrainGenerate(world, terrain);
 				worldSpawnTerrain(world, terrain);
@@ -80,12 +84,16 @@ static void worldUpdateLists(t_world * world, t_renderer * renderer, t_camera * 
 
 	//update listst
 	HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
-		int indexx = ABS(terrain->index.x - camera->terrain_index.x);
-		int indexy = ABS(terrain->index.y - camera->terrain_index.y);
 
-		if (indexx > TERRAIN_LOADED_DISTANCE || indexy > TERRAIN_LOADED_DISTANCE) {
+		t_vec2i diff;
+
+		vec2i_sub(&diff, &(terrain->index), &(camera->terrain_index));
+
+		int distance = vec2i_length(&diff);
+
+		if (distance > TERRAIN_KEEP_LOADED_DISTANCE) {
 			array_list_add(renderer->delete_list, &terrain);
-		} else if (indexx < TERRAIN_RENDER_DISTANCE && indexy < TERRAIN_RENDER_DISTANCE) {
+		} else if (distance < TERRAIN_RENDER_DISTANCE) {
 			array_list_add(renderer->render_list, &terrain);
 		}
 	}

@@ -56,5 +56,5 @@ void cameraUpdate(t_glh_context * context, t_world * world, t_renderer * rendere
 	cameraUpdateMatrices(camera);
 
 	//update camera world index
-	worldGetGridIndex(world, camera->pos.x, camera->pos.y, &(camera->terrain_index.x), &(camera->terrain_index.y));
+	worldGetGridIndex(world, camera->pos.x, camera->pos.z, &(camera->terrain_index.x), &(camera->terrain_index.y));
 }

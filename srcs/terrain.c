@@ -11,8 +11,8 @@ float clamp(float val, float min, float max) {
 
 static float terrainGenerateHeightAt(t_world * world, int gridX, int gridY, int x, int y) {
 
-	static float height_ratio = TERRAIN_SIZE / 128.0f;
-	static int layers = 8;
+	static float height_ratio = 1.0f;
+	static int layers = 1;
 	static int layerf = 3.5f;
 	static int weightf = 0.9f;
 

@@ -124,15 +124,12 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 
 	//delete every terrains that has to
 	ARRAY_LIST_ITER_START(renderer->delete_list, t_terrain **, terrain_ptr, i) {
-		t_terrain * terrain = *terrain_ptr;
-
-		printf("deleting at: %d %d\n", terrain->index.x, terrain->index.y);
-		hmap_remove_key(world->terrains, &(terrain->index));
-		terrainDelete(terrain);
+		worldRemoveTerrain(world, *terrain_ptr);
 	}
 	ARRAY_LIST_ITER_END(renderer->delete_list, t_terrain *, terrain, i);
 
     //clear color buffer
+    glhClearColor(119 / 255.0f, 181 / 255.0f, 254 / 255.0f, 1.0f);
     glhClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//bind the program
@@ -142,7 +139,7 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	glhProgramLoadUniformMatrix4f(u_mvp_matrix, (float*)&(camera->mviewproj));
 
 	//debug
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	//render every terrain that has to
 	ARRAY_LIST_ITER_START(renderer->render_list, t_terrain **, terrain_ptr, i) {
