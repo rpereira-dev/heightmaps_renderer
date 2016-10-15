@@ -90,8 +90,8 @@ int main(int argc, char **argv) {
     	inputUpdate(context, &world, &renderer, &camera);
     	
     	//update the camera and the world
-    	cameraUpdate(&camera);
-    	worldUpdate(&world, &camera);
+    	cameraUpdate(context, &world, &renderer, &camera);
+    	worldUpdate(context, &world, &renderer, &camera);
 
     	//update the renderer
     	rendererUpdate(context, &world, &renderer, &camera);

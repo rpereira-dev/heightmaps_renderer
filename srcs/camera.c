@@ -6,8 +6,7 @@ void cameraInit(t_camera * camera) {
 	camera->rot.pitch = 0, camera->rot.yaw = 0, camera->rot.roll = 0;
 	camera->fov = 70.0f;
 	camera->near_distance = 0.01f;
-	camera->far_distance = TERRAIN_SIZE * 32.0f;
-	camera->render_distance = TERRAIN_SIZE * 32.0f;
+	camera->far_distance = TERRAIN_RENDER_DISTANCE * TERRAIN_RENDER_DISTANCE * TERRAIN_SIZE;
 }
 
 void cameraDelete(t_camera * camera) {
@@ -47,6 +46,15 @@ static void cameraUpdateMatrices(t_camera * camera) {
 	mat4f_mult(viewproj, proj, view);
 }
 
-void cameraUpdate(t_camera * camera) {
+void cameraUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
+	(void)context;
+	(void)world;
+	(void)renderer;
+	(void)camera;
+
+	//update camera matrices
 	cameraUpdateMatrices(camera);
+
+	//update camera world index
+	worldGetGridIndex(world, camera->pos.x, camera->pos.y, &(camera->terrain_index.x), &(camera->terrain_index.y));
 }

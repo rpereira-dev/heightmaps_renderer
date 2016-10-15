@@ -1,16 +1,5 @@
 #include "renderer.h"
 
-int terrainHash(t_terrain * terrain) {
-	(void)terrain;
-	return (0);
-}
-
-int terrainCmp(t_terrain * left, t_terrain * right) {
-	(void)left;
-	(void)right;
-	return (1);
-}
-
 /*
 float clamp(float val, float min, float max) {
 	if (val > max) {
@@ -44,96 +33,21 @@ static float terrainGenerateHeightAt(t_world * world, int gridX, int gridY, int 
 
 static void terrainGenerateVertices(t_world * world, float vertices[], int gridX, int gridY,
 										float (*heightGen)(t_world *, int, int, int, int)) {
-
-	//generate the model
-	static float unit = 1 / (float)(TERRAIN_DETAIL - 1);
-
-	float y00, y10, y01, y11;
-	float px00, py00, pz00;
-	float px10, py10, pz10;
-	float px01, py01, pz01;
-	float px11, py11, pz11;
-
 	int x, z;
-
 	int i = 0;
-	for (x = 0 ; x < TERRAIN_DETAIL - 1; x++) {
-		for (z = 0 ; z < TERRAIN_DETAIL - 1; z++) {
-
-			//height generation
-			y00 = heightGen(world, gridX, gridY, x + 0, z + 0);
-			y10 = heightGen(world, gridX, gridY, x + 1, z + 0);
-			y01 = heightGen(world, gridX, gridY, x + 0, z + 1);
-			y11 = heightGen(world, gridX, gridY, x + 1, z + 1);
-
-			//position vertices
-			px00 = (float)x * unit;
-			py00 = y00;
-			pz00 = (float)z * unit;
-
-			px10 = ((float)x + 1.0f) * unit;
-			py10 = y10;
-			pz10 = pz00;
-
-			px01 = px10;
-			py01 = y01;
-			pz01 = ((float)z + 1.0f) * unit;
-
-			px11 = px10;
-			py11 = y11;
-			pz11 = pz01;
-
-			//first triangle
-			vertices[i++] = px00;
-			vertices[i++] = py00;
-			vertices[i++] = pz00;
-
-			vertices[i++] = px10;
-			vertices[i++] = py10;
-			vertices[i++] = pz10;
-
-			vertices[i++] = px11;
-			vertices[i++] = py11;
-			vertices[i++] = pz11;
-
-			//second triangle
-			vertices[i++] = px00;
-			vertices[i++] = py00;
-			vertices[i++] = pz00;
-
-			vertices[i++] = px11;
-			vertices[i++] = py11;
-			vertices[i++] = pz11;
-
-			vertices[i++] = px01;
-			vertices[i++] = py01;
-			vertices[i++] = pz01;
+	for (x = 0 ; x < TERRAIN_DETAIL ; x++) {
+		for (z = 0 ; z < TERRAIN_DETAIL; z++) {
+			vertices[i++] =  heightGen(world, gridX, gridY, x, z);
 		}
 	}
 }
-
-/*
-static void terrainGenerateVertices(t_world * world, float vertices[], int gridX, int gridY,
-									float (*heightGen)(t_world *, int, int, int, int)) {
-	int x, z;
-
-	int i = 1;
-	for (x = 0 ; x < TERRAIN_DETAIL - 1; x++) {
-		for (z = 0 ; z < TERRAIN_DETAIL - 1; z++) {
-			vertices[i] = heightGen(world, gridX, gridY, x, z);
-			i += 3;
-		}
-	}
-}
-*/
 
 //update the vbo
 static void terrainUpdateVBO(t_terrain * terrain, float vertices[]) {
 
 	//bind it to gpu
 	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_INDICES_COUNT * TERRAIN_FLOAT_PER_VERTEX * sizeof(float), vertices, GL_STATIC_DRAW);
-	//glhVBOData(GL_ARRAY_BUFFER, TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX * sizeof(float), vertices, GL_STATIC_DRAW);
+	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * sizeof(float), vertices, GL_STATIC_DRAW);
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 }
 
@@ -152,12 +66,7 @@ void terrainGenerate(t_world * world, t_terrain * terrain) {
 	int gridX = terrain->index.x;
 	int gridY = terrain->index.y;
 
-	//generate model vertices
-	//float vertices[TERRAIN_VERTEX_COUNT * TERRAIN_FLOAT_PER_VERTEX];
-	//set default vertices
-	//memcpy(vertices, world->terrain_default_vertices, sizeof(vertices));
-
-	float vertices[TERRAIN_INDICES_COUNT * TERRAIN_FLOAT_PER_VERTEX];
+	float vertices[TERRAIN_DETAIL * TERRAIN_DETAIL];
 
 	//generate heightmap
 	terrainGenerateVertices(world, vertices, gridX, gridY, terrainGenerateHeightAt);
@@ -168,7 +77,7 @@ void terrainGenerate(t_world * world, t_terrain * terrain) {
 
 
 /** allocate a new terrain on heap + gpu */
-t_terrain * terrainNew(int gridX, int gridY) {
+t_terrain * terrainNew(t_renderer * renderer, int gridX, int gridY) {
 
 	//allocate the terrain
 	t_terrain * terrain = (t_terrain*)malloc(sizeof(t_terrain));
@@ -183,12 +92,25 @@ t_terrain * terrainNew(int gridX, int gridY) {
 	terrain->vao = glhVAOGen();
 	terrain->vbo = glhVBOGen();
 
-	//bind it to gpu
+	//bind vao
 	glhVAOBind(terrain->vao);
-	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-	glhVAOSetAttribute(0, 3, GL_FLOAT, 0, 3 * sizeof(float), NULL);
-	glhVAOEnableAttribute(0);
+
+	//bind indices
+	glhVBOBind(GL_ELEMENT_ARRAY_BUFFER, renderer->terrain_indices);
+
+	//bind static grid
+	glhVBOBind(GL_ARRAY_BUFFER, renderer->terrain_vertices);
+	glhVAOSetAttribute(0, 2, GL_FLOAT, 0, 2 * sizeof(float), NULL);
 	glhVBOUnbind(GL_ARRAY_BUFFER);
+	glhVAOEnableAttribute(0);
+
+	//bind heightmap
+	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
+	glhVAOSetAttribute(1, 1, GL_FLOAT, 0, 1 * sizeof(float), NULL);
+	glhVBOUnbind(GL_ARRAY_BUFFER);
+	glhVAOEnableAttribute(1);
+
+	//unbind vao
 	glhVAOUnbind();
 
 	return (terrain);

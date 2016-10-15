@@ -76,6 +76,7 @@ static void inputUpdateDebug(t_glh_context * context, t_world * world, t_rendere
 	printf("-------------------- CAMERA ----------------------------\n");
 	printf("\n");
 	printf("position: vec3f(x:%.2f ; y:%.2f ; z:%.2f)\n", camera->pos.x, camera->pos.y, camera->pos.z);
+	printf("index   : vec2i(x:%d ; y:%d)\n", camera->terrain_index.x, camera->terrain_index.y);
 	printf("rotation: vec3f(x:%.2f ; y:%.2f ; z:%.2f)\n", camera->rot.x, camera->rot.y, camera->rot.z);
 	printf("viewvec : vec3f(x:%.2f ; y:%.2f ; z:%.2f)\n", camera->vview.x, camera->vview.y, camera->vview.z);
 	printf("\n");
