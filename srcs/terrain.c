@@ -1,14 +1,5 @@
 #include "renderer.h"
 
-/*
-float clamp(float val, float min, float max) {
-	if (val > max) {
-		return (max);
-	}
-    return (val < min ? min : val);
-}
-*/
-
 static float terrainGetHeight(float vertices[], int x, int y) {
 	return (vertices[(x * TERRAIN_DETAIL + y) * 4]);
 }
@@ -16,10 +7,10 @@ static float terrainGetHeight(float vertices[], int x, int y) {
 static void terrainCalculateNormal(float vertices[], t_vec3f * normal, int x, int z) {
 
 	float xy_height = terrainGetHeight(vertices, x, z);
-	float left	= (x - 1 >= 0) 				? terrainGetHeight(vertices, x - 1, z) : xy_height + xy_height - terrainGetHeight(vertices, x + 1, z);
-	float right	= (x + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x + 1, z) : xy_height + xy_height - terrainGetHeight(vertices, x - 1, z);
-	float down	= (z - 1 >= 0) 				? terrainGetHeight(vertices, x, z - 1) : xy_height + xy_height - terrainGetHeight(vertices, x, z + 1);
-	float up 	= (z + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x, z + 1) : xy_height + xy_height - terrainGetHeight(vertices, x, z - 1);
+	float left	= (x - 1 >= 0) 				? terrainGetHeight(vertices, x - 1, z) : xy_height;
+	float right	= (x + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x + 1, z) : xy_height;
+	float down	= (z - 1 >= 0) 				? terrainGetHeight(vertices, x, z - 1) : xy_height;
+	float up 	= (z + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x, z + 1) : xy_height;
 	vec3f_set(normal, left - right, 2.0f, down - up);
 	vec3f_normalize(normal, normal);
 }
@@ -42,34 +33,30 @@ static void terrainGenerateNormals(float vertices[]) {
 	}
 }
 
-static float terrainGenerateHeightAt(t_world * world, int gridX, int gridY, int x, int y) {
-
-/*
-	float posx = gridX * (TERRAIN_DETAIL - 1) + x;
-	float posy = gridY * (TERRAIN_DETAIL - 1) + y;
-	return (noise2(world->noise, posx * 0.009f, posy * 0.009f) * 3.37f);
-*/
-
-
-	static float height_ratio = 1.0f;
-	static int layers = 1;
-	static int layerf = 3.5f;
-	static int weightf = 0.9f;
-
-	float layer = 0.009f;
-	float weight = 1.0f;
-	float height = 0;
-	int i;
-	for (i = 0 ; i < layers ; i++) {
-		float posx = gridX * (TERRAIN_DETAIL - 1) + x;
-		float posy = gridY * (TERRAIN_DETAIL - 1) + y;
-		height += noise2(world->noise, posx * layer, posy * layer) * weight;
-	    layer *= layerf;
-	    weight *= weightf;
+float clamp(float val, float min, float max) {
+	if (val > max) {
+		return (max);
 	}
-	return (height * height_ratio);
+    return (val < min ? min : val);
 }
 
+static float terrainGenerateHeightAt(t_world * world, int gridX, int gridY, int x, int y) {
+
+	float height = 0;
+    float layerF = 0.008f;
+    float weight = 1;
+    int i = 0;
+    int posx = gridX * (TERRAIN_DETAIL - 1) + x;
+    int posy = gridY * (TERRAIN_DETAIL - 1) + y;
+    for (i = 0 ; i < 3 ; i++) {
+		height += noise2(world->noise, posx * layerF, posy * layerF) * weight;
+        layerF *= 3.5f;
+        weight *= 0.5f;
+    }
+
+	height = clamp(height, -0.9, 0.9);
+	return (height);
+}
 
 static void terrainGenerateVertices(t_world * world, float vertices[], int gridX, int gridY,
 										float (*heightGen)(t_world *, int, int, int, int)) {

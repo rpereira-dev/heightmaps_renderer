@@ -31,10 +31,10 @@ static void rendererGenerateBufferIndices(t_renderer * renderer) {
 			i10 = (x + 1) * TERRAIN_DETAIL + z;
 			i11 = i10 + 1;
 			indices[i++] = i00;
+			indices[i++] = i11;
 			indices[i++] = i10;
+			indices[i++] = i00;
 			indices[i++] = i01;
-			indices[i++] = i01;
-			indices[i++] = i10;
 			indices[i++] = i11;
 		}
 	}

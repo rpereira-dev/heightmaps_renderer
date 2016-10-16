@@ -81,7 +81,14 @@ int main(int argc, char **argv) {
 	worldInit(&world);
 
 	printf("Loop started...\n");
+
+	long int total = 0;
+	long int count = 0;
+
     while (!glhWindowShouldClose(context->window)) {
+
+    	long t1;
+    	MICROSEC(t1);
 
     	//update the window
     	glhWindowUpdate(context->window);
@@ -99,7 +106,13 @@ int main(int argc, char **argv) {
     	//render
     	rendererRender(context, &world, &renderer, &camera);
     	
-    	glhCheckError("post rendererUpdate()");
+    	//glhCheckError("post rendererUpdate()");
+
+    	long t2;
+    	MICROSEC(t2);
+
+    	total += (t2 - t1);
+    	count++;
 
     	//swap buffers
     	glhSwapBuffer(context->window);
@@ -123,6 +136,8 @@ int main(int argc, char **argv) {
     glhStop();
 
 	printf("All done\n");
+
+	printf("Moyenne: %ld\n", total / 1000 / count);
 
 	return (0);
 }

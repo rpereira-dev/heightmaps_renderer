@@ -75,27 +75,6 @@ static void worldLoadNewTerrains(t_world * world, t_renderer * renderer, t_camer
 		}
 	}
 }
-//	public boolean isInFrustum(float x, float y, float z, float imprecision) {
-//
-//		// get the vector which point to the given point
-//		float vx = x - this._pos.x;
-//		float vy = y - this._pos.y;
-//		float vz = z - this._pos.z;
-//
-//		// get it length
-//		float length = Vector3f.length(vx, vy, vz);
-//
-//		// normalize the vector
-//		vx /= length;
-//		vy /= length;
-//		vz /= length;
-//
-//		double dot = vx * this._look_vec.x + vy * this._look_vec.y + vz * this._look_vec.z;
-//		double angle = Math.toDegrees(Math.acos(dot));
-//		return (angle < (this._fov + imprecision) / 2);
-//	}
-//
-
 
 static void worldUpdateLists(t_world * world, t_renderer * renderer, t_camera * camera) {
 
@@ -121,7 +100,7 @@ static void worldUpdateLists(t_world * world, t_renderer * renderer, t_camera * 
 		} else if (distance < TERRAIN_RENDER_DISTANCE) {
 			float dot = vec3f_dot_product(&(camera->vview), &diff);
 			float angle = acos(dot);
-			if (angle < camera->fov + 0.01f) {
+			if (distance <= 2 || angle < camera->fov + 0.01f) {
 				array_list_add(renderer->render_list, &terrain);
 			}
 		}

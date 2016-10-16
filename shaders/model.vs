@@ -124,12 +124,34 @@ void main(void) {
 
   vec3 w = world_pos.xyz;
   
-  //float noise = snoise(w * 0.0009) + snoise(w * 0.009) * 0.05 + snoise(w * 0.09) * 0.25 + snoise(w * 0.9) * 0.125 + snoise(w * 9) * 0.05;
-
   vec3 sun = normalize(vec3(1, 1, 1));
   float n = dot(normal, sun);
   float intensity = max(n, 0.4);
   vec3 diffuse = intensity * vec3(1, 1, 1);
 
-  pass_color = vec4(diffuse, 1.0);
+  vec3 color;
+  
+  if (w.y < -200) {
+    color = vec3(0.1, 0.2, 0.9);
+  } else if (w.y < 100) {
+    color = vec3(0.1, 1, 0.2);
+  } else if (w.y < 140) {
+    color = vec3(0.5, 0.24, 0.17);
+  } else if (w.y < 180) {
+    color = vec3(0.5, 0.5, 0.5);
+  } else {
+    color = vec3(1, 1, 1);
+  }
+
+  float noise = clamp(abs(snoise(w)), 0.8, 1.2);
+
+  vec3 terrain_color = diffuse * color * noise;
+
+  float fog_density = 0.0005;
+  float fog_gradient = 3.5;
+  float distance = length(gl_Position.xyz);
+  float visibility = exp(-pow(distance * fog_density, fog_gradient));
+  visibility = 1 - clamp(visibility, 0, 1);
+  
+  pass_color = vec4(mix(terrain_color, vec3(119 / 255.0, 181 / 255.0, 254 / 255.0), visibility), 1.0);
 }

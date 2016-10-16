@@ -113,7 +113,7 @@ static void inputUpdateCamera(t_camera * camera) {
 
 	//rotation
 	camera->rot.pitch += ((win->mouseY - win->prev_mouseY) * 0.3f * rotspeed);
-	camera->rot.yaw += -((win->mouseX - win->prev_mouseX) * 0.3f * rotspeed);
+	camera->rot.yaw += ((win->mouseX - win->prev_mouseX) * 0.3f * rotspeed);
 
 	//move
 	if (glfwGetKey(win->pointer, GLFW_KEY_W) == GLFW_PRESS) {
@@ -126,11 +126,11 @@ static void inputUpdateCamera(t_camera * camera) {
 		camera->pos.z += -camera->vview.z * movespeed;
 	}
 
-	if (glfwGetKey(win->pointer, GLFW_KEY_A) == GLFW_PRESS) {
+	if (glfwGetKey(win->pointer, GLFW_KEY_D) == GLFW_PRESS) {
 		camera->pos.x += -camera->vview.z * movespeed;
 		camera->pos.z += camera->vview.x * movespeed;
 	}
-	else if (glfwGetKey(win->pointer, GLFW_KEY_D) == GLFW_PRESS) {
+	else if (glfwGetKey(win->pointer, GLFW_KEY_A) == GLFW_PRESS) {
 		camera->pos.x += camera->vview.z * movespeed;
 		camera->pos.z += -camera->vview.x * movespeed;
 	}
