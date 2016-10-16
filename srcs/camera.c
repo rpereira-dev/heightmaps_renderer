@@ -4,7 +4,7 @@ void cameraInit(t_camera * camera) {
 
 	camera->pos.x = 0, camera->pos.y = 0, camera->pos.z = 0;
 	camera->rot.pitch = 0, camera->rot.yaw = 0, camera->rot.roll = 0;
-	camera->fov = 70.0f;
+	camera->fov = DEG_TO_RAD(70.0f);
 	camera->near_distance = 0.01f;
 	camera->far_distance = TERRAIN_RENDER_DISTANCE * TERRAIN_RENDER_DISTANCE * TERRAIN_SIZE;
 }
@@ -40,7 +40,7 @@ static void cameraUpdateMatrices(t_camera * camera) {
 
 	//projection matrix
 	float aspect = 1.6f;
-	mat4f_perspective(proj, aspect, DEG_TO_RAD(camera->fov), camera->near_distance, camera->far_distance);
+	mat4f_perspective(proj, aspect, camera->fov, camera->near_distance, camera->far_distance);
 
 	//combine view and projection
 	mat4f_mult(viewproj, proj, view);

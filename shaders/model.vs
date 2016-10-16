@@ -104,8 +104,7 @@ float snoise(vec3 v)
   }
 
 in vec2 pos;
-in float height;
-//in vec3 color;
+in vec4 vertex;
 
 out vec4 pass_color;
 
@@ -117,15 +116,20 @@ uniform mat4 transf_matrix;
 
 void main(void) {
 
+  float height = vertex.x;
+  vec3 normal = vertex.yzw;
 	vec4 world_pos = transf_matrix * vec4(pos.x, height, pos.y, 1.0);
 	gl_Position = mvp_matrix * world_pos;
 	//gl_Position = vec4(pos.x, pos.y, 0.0, 1.0);
 
-	float noise = (snoise(world_pos.xyz * 0.01) + snoise((world_pos.xyz + vec3(4000, 4000, 4000)) * 0.1) + snoise(world_pos.xyz + vec3(8000, 8000, 8000))) / 2.0f;
+  vec3 w = world_pos.xyz;
+  
+  //float noise = snoise(w * 0.0009) + snoise(w * 0.009) * 0.05 + snoise(w * 0.09) * 0.25 + snoise(w * 0.9) * 0.125 + snoise(w * 9) * 0.05;
 
-	float r = 142 / 255.0;
-	float g = 84 / 255.0;
-	float b = 52 / 255.0;
+  vec3 sun = normalize(vec3(1, 1, 1));
+  float n = dot(normal, sun);
+  float intensity = max(n, 0.4);
+  vec3 diffuse = intensity * vec3(1, 1, 1);
 
-	pass_color = vec4(r * noise, g * noise, b * noise, 1.0);
+  pass_color = vec4(diffuse, 1.0);
 }

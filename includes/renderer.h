@@ -27,15 +27,15 @@ typedef struct	s_camera {
 }				t_camera;
 
 //terrain detail (number of vertex per line)
-# define TERRAIN_DETAIL (64)
+# define TERRAIN_DETAIL (16)
 //terrain width (and height)
 # define TERRAIN_SIZE (64)
 // number of terrain to render in term of distance
-# define TERRAIN_RENDER_DISTANCE (4)
+# define TERRAIN_RENDER_DISTANCE (16)
 // distance where terrain are kept loaded in memory
-# define TERRAIN_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE * 2)
+# define TERRAIN_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE)
 // distance where terrain are kept loaded in memory
-# define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_LOADED_DISTANCE * 2)
+# define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE)
 
 /** a terrain */
 typedef struct 	s_terrain {

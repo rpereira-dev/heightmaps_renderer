@@ -9,7 +9,47 @@ float clamp(float val, float min, float max) {
 }
 */
 
+static float terrainGetHeight(float vertices[], int x, int y) {
+	return (vertices[(x * TERRAIN_DETAIL + y) * 4]);
+}
+
+static void terrainCalculateNormal(float vertices[], t_vec3f * normal, int x, int z) {
+
+	float xy_height = terrainGetHeight(vertices, x, z);
+	float left	= (x - 1 >= 0) 				? terrainGetHeight(vertices, x - 1, z) : xy_height + xy_height - terrainGetHeight(vertices, x + 1, z);
+	float right	= (x + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x + 1, z) : xy_height + xy_height - terrainGetHeight(vertices, x - 1, z);
+	float down	= (z - 1 >= 0) 				? terrainGetHeight(vertices, x, z - 1) : xy_height + xy_height - terrainGetHeight(vertices, x, z + 1);
+	float up 	= (z + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x, z + 1) : xy_height + xy_height - terrainGetHeight(vertices, x, z - 1);
+	vec3f_set(normal, left - right, 2.0f, down - up);
+	vec3f_normalize(normal, normal);
+}
+
+static void terrainGenerateNormals(float vertices[]) {
+	t_vec3f normal;
+
+	int x, z;
+	int i = 0;
+	for (x = 0 ; x < TERRAIN_DETAIL ; x++) {
+		for (z = 0 ; z < TERRAIN_DETAIL; z++) {
+
+			//calculate the normal
+			terrainCalculateNormal(vertices, &normal, x, z);
+			++i; //skip height
+			vertices[i++] = normal.x;
+			vertices[i++] = normal.y;
+			vertices[i++] = normal.z;
+		}
+	}
+}
+
 static float terrainGenerateHeightAt(t_world * world, int gridX, int gridY, int x, int y) {
+
+/*
+	float posx = gridX * (TERRAIN_DETAIL - 1) + x;
+	float posy = gridY * (TERRAIN_DETAIL - 1) + y;
+	return (noise2(world->noise, posx * 0.009f, posy * 0.009f) * 3.37f);
+*/
+
 
 	static float height_ratio = 1.0f;
 	static int layers = 1;
@@ -37,7 +77,10 @@ static void terrainGenerateVertices(t_world * world, float vertices[], int gridX
 	int i = 0;
 	for (x = 0 ; x < TERRAIN_DETAIL ; x++) {
 		for (z = 0 ; z < TERRAIN_DETAIL; z++) {
-			vertices[i++] =  heightGen(world, gridX, gridY, x, z);
+			vertices[i++] = heightGen(world, gridX, gridY, x, z);
+			++i; //skip normalx
+			++i; //skip normaly
+			++i; //skip normalz
 		}
 	}
 }
@@ -47,12 +90,12 @@ static void terrainUpdateVBO(t_terrain * terrain, float vertices[]) {
 
 	//bind it to gpu
 	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * sizeof(float), vertices, GL_STATIC_DRAW);
+	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * 4 * sizeof(float), vertices, GL_STATIC_DRAW);
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 }
 
 /** generate n terrain from the given bmp map file, and return them */
-void terrainLoadHeightMap(t_terrain * terrains, int * n, char const * bmpfile) {
+void terrainLoadvertices(t_terrain * terrains, int * n, char const * bmpfile) {
 	(void)terrains;
 	(void)n;
 	(void)bmpfile;
@@ -66,11 +109,11 @@ void terrainGenerate(t_world * world, t_terrain * terrain) {
 	int gridX = terrain->index.x;
 	int gridY = terrain->index.y;
 
-	float vertices[TERRAIN_DETAIL * TERRAIN_DETAIL];
+	float vertices[TERRAIN_DETAIL * TERRAIN_DETAIL * 4];
 
-	//generate heightmap
+	//generate vertices
 	terrainGenerateVertices(world, vertices, gridX, gridY, terrainGenerateHeightAt);
-
+	terrainGenerateNormals(vertices);
 	//update the vbo
 	terrainUpdateVBO(terrain, vertices);
 }
@@ -100,13 +143,13 @@ t_terrain * terrainNew(t_renderer * renderer, int gridX, int gridY) {
 
 	//bind static grid
 	glhVBOBind(GL_ARRAY_BUFFER, renderer->terrain_vertices);
-	glhVAOSetAttribute(0, 2, GL_FLOAT, 0, 2 * sizeof(float), NULL);
+	glhVAOSetAttribute(0, 2, GL_FLOAT, 0, 2 * sizeof(float), NULL); //default vertices
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 	glhVAOEnableAttribute(0);
 
-	//bind heightmap
+	//bind vertices
 	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-	glhVAOSetAttribute(1, 1, GL_FLOAT, 0, 1 * sizeof(float), NULL);
+	glhVAOSetAttribute(1, 4, GL_FLOAT, 0, 4 * sizeof(float), NULL); //height + normal
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 	glhVAOEnableAttribute(1);
 

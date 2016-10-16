@@ -19,7 +19,7 @@ C_OBJ = $(SRCS:.c=.o)
 FLAGS = -Wall -Werror -Wextra
 INC = -I ./includes -I $(LIBC)/includes -I $(LIBM)/includes -I $(LIBGL)/include
 
-all: $(LIB_STATIC) $(NAME)
+all: $(LIB_STATIC) $(NAME) $(HEADERS)
 
 $(LIB_STATIC):
 	git submodule init
@@ -31,7 +31,7 @@ $(LIB_STATIC):
 $(NAME): $(C_OBJ)
 	$(CC) $(FLAGS) -o $(NAME) $(C_OBJ) $(LIB_STATIC) $(LIB_OTHER)
 
-%.o: %.c
+%.o: %.c ./includes/renderer.h
 	$(CC) $(FLAGS) -o $@ -c $< $(INC)
 
 clean:

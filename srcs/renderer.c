@@ -98,6 +98,9 @@ void rendererInit(t_renderer * renderer) {
 
 	//enable depth test
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
 
 	glhCheckError("post rendererInit()");
 }
@@ -139,7 +142,11 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	glhProgramLoadUniformMatrix4f(u_mvp_matrix, (float*)&(camera->mviewproj));
 
 	//debug
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	if (glfwGetKey(context->window->pointer, GLFW_KEY_F) == GLFW_PRESS) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	} else {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
 
 	//render every terrain that has to
 	ARRAY_LIST_ITER_START(renderer->render_list, t_terrain **, terrain_ptr, i) {

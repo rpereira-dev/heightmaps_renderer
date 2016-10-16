@@ -75,6 +75,27 @@ static void worldLoadNewTerrains(t_world * world, t_renderer * renderer, t_camer
 		}
 	}
 }
+//	public boolean isInFrustum(float x, float y, float z, float imprecision) {
+//
+//		// get the vector which point to the given point
+//		float vx = x - this._pos.x;
+//		float vy = y - this._pos.y;
+//		float vz = z - this._pos.z;
+//
+//		// get it length
+//		float length = Vector3f.length(vx, vy, vz);
+//
+//		// normalize the vector
+//		vx /= length;
+//		vy /= length;
+//		vz /= length;
+//
+//		double dot = vx * this._look_vec.x + vy * this._look_vec.y + vz * this._look_vec.z;
+//		double angle = Math.toDegrees(Math.acos(dot));
+//		return (angle < (this._fov + imprecision) / 2);
+//	}
+//
+
 
 static void worldUpdateLists(t_world * world, t_renderer * renderer, t_camera * camera) {
 
@@ -85,16 +106,24 @@ static void worldUpdateLists(t_world * world, t_renderer * renderer, t_camera * 
 	//update listst
 	HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
 
-		t_vec2i diff;
+		t_vec3f diff;
+		diff.x = terrain->index.x - camera->terrain_index.x;
+		diff.y = 0;
+		diff.z = terrain->index.y - camera->terrain_index.y;
 
-		vec2i_sub(&diff, &(terrain->index), &(camera->terrain_index));
-
-		int distance = vec2i_length(&diff);
+		float distance = vec3f_length(&diff);
+		float normalizer = 1 / distance;
+		diff.x *= normalizer;
+		diff.z *= normalizer;
 
 		if (distance > TERRAIN_KEEP_LOADED_DISTANCE) {
 			array_list_add(renderer->delete_list, &terrain);
 		} else if (distance < TERRAIN_RENDER_DISTANCE) {
-			array_list_add(renderer->render_list, &terrain);
+			float dot = vec3f_dot_product(&(camera->vview), &diff);
+			float angle = acos(dot);
+			if (angle < camera->fov + 0.01f) {
+				array_list_add(renderer->render_list, &terrain);
+			}
 		}
 	}
 	HMAP_ITER_END(world->terrains, t_terrain *, terrain);
