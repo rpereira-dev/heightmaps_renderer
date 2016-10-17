@@ -25,33 +25,56 @@ static int fastfloor(float x) {
 	return ((x < xi) ? (xi - 1) : xi);
 }
 
-t_noise2 * noise2New(void) {
-	t_noise2 * noise = (t_noise2 *)malloc(sizeof(t_noise2));
+t_noise * noiseNew(void) {
+	t_noise * noise = (t_noise *)malloc(sizeof(t_noise));
 	if (noise == NULL) {
 		return (NULL);
 	}
-	noise2Seed(noise, time(NULL));
+	noiseSeed(noise, time(NULL));
 	return (noise);
 }
 
-void noise2Seed(t_noise2 * noise, unsigned int seed) {
+
+unsigned int noiseNextInt(long long unsigned int * seed) {
+	*seed = 6364136223846793005ULL * *seed + 1;
+	unsigned int x = *seed >> 32;
+	x ^= x >> 11;
+	x ^= (x << 7) & 0x9D2C5680;
+	x ^= (x << 15) & 0xEFC60000;
+	x ^= x >> 18;
+	return (x);
+}
+
+void noiseSeed(t_noise * noise, long long unsigned int seed) {
 	noise->seed = seed;
-	
-	//TODO
+
+	//copy default permutation
 	memcpy(noise->p, default_permutation, sizeof(default_permutation));
 
+	int swap_from, swap_to;
+	unsigned char tmp;
+
+	//process permutations
 	int i;
 	for (i = 0 ; i < 512; i++) {
-		noise->pmod12[i] = noise->p[i] % 12;
+
+		//generate next pemrutation
+		swap_from	= noiseNextInt(&seed) & 255; //mod 256
+		swap_to		= noiseNextInt(&seed) & 255; //mod 256
+
+		//do the swap
+		tmp 				= noise->p[swap_from];
+		noise->p[swap_from]	= noise->p[swap_to];
+		noise->p[swap_to] 	= tmp;
 	}
 }
 
-void noise2Delete(t_noise2 * noise) {
+void noiseDelete(t_noise * noise) {
 	free(noise);
 }
 
 static float grad2(int hash, float x, float y) {
-	switch(hash & 8) {
+	switch(hash & 0x8) {
 		case 0x0: return  x + y;
 		case 0x1: return -x + y;
 		case 0x2: return  x - y;
@@ -64,7 +87,7 @@ static float grad2(int hash, float x, float y) {
 	}
 }
 
-float noise2(t_noise2 * noise, float x, float y) {
+float noise2(t_noise * noise, float x, float y) {
 	static float F2 = 0.3660254037f;
 	static float G2 = 0.2113248654f;
 	static float TWO_G2 = 2.0f * 0.2113248654f;
@@ -86,9 +109,9 @@ float noise2(t_noise2 * noise, float x, float y) {
     float y2 = y0 - 1.0 + TWO_G2;
     int ii = i & 255;
     int jj = j & 255;
-    int gi0 = noise->pmod12[ii + noise->p[jj]];
-    int gi1 = noise->pmod12[ii + i1 + noise->p[jj + j1]];
-    int gi2 = noise->pmod12[ii + 1 + noise->p[jj + 1]];
+    int gi0 = noise->p[ii + noise->p[jj]];
+    int gi1 = noise->p[ii + i1 + noise->p[jj + j1]];
+    int gi2 = noise->p[ii + 1 + noise->p[jj + 1]];
 
     float t0 = 0.5f - x0 * x0 - y0 * y0;
     if (t0 < 0) {
@@ -117,89 +140,152 @@ float noise2(t_noise2 * noise, float x, float y) {
     return (70.0 * (n0 + n1 + n2));
 }
 
-/*
-
-static float fade(float t) {
-	return (t * t * t * (t * (t * 6 - 15) + 10));
-}
-
-static float lerp(float t, float a, float b) {
-	return (a + t * (b - a));
-}
-
 static float grad3(int hash, float x, float y, float z) {
 	switch(hash & 0xF) {
-		case 0x0: return  x + y;
-		case 0x1: return -x + y;
-		case 0x2: return  x - y;
-		case 0x3: return -x - y;
-		case 0x4: return  x + z;
-		case 0x5: return -x + z;
-		case 0x6: return  x - z;
-		case 0x7: return -x - z;
-		case 0x8: return  y + z;
-		case 0x9: return -y + z;
-		case 0xA: return  y - z;
-		case 0xB: return -y - z;
-		case 0xD: return -y + z;
-		case 0xE: return  y - x;
-		case 0xF: return -y - z;
+        case 0x0: return  x + y;
+        case 0x1: return -x + y;
+        case 0x2: return  x - y;
+        case 0x3: return -x - y;
+        case 0x4: return  x + z;
+        case 0x5: return -x + z;
+        case 0x6: return  x - z;
+        case 0x7: return -x - z;
+        case 0x8: return  y + z;
+        case 0x9: return -y + z;
+        case 0xA: return  y - z;
+        case 0xB: return -y - z;
+        case 0xC: return  y + x;
+        case 0xD: return -y + z;
+        case 0xE: return  y - x;
+        case 0xF: return -y - z;
 		default: return 0;
     }
 }
 
-t_noise3 * noise3New(void) {
-	t_noise3 * noise = (t_noise3*)malloc(sizeof(t_noise3));
-	if (noise == NULL) {
-		return (NULL);
-	}
-	noise3Seed(noise, time(NULL));
-	return (noise);
+
+float noise3(t_noise * noise, float x, float y, float z) {
+	static float F3 = 1.0f / 3.0f;
+	static float G3 = 1.0f / 6.0f;
+
+	float n0, n1, n2, n3;
+
+	float s = (x + y + z) * F3;
+	int i = fastfloor(x + s);
+	int j = fastfloor(y + s);
+	int k = fastfloor(z + s);
+
+	float t = ( i + j + k ) * G3;
+
+	float X0 = i - t;
+	float Y0 = j - t;
+	float Z0 = k - t;
+
+	float x0 = x - X0;
+	float y0 = y - Y0;
+	float z0 = z - Z0;
+
+	int i1, j1, k1;
+	int i2, j2, k2;
+	if (x0 >= y0) {
+		if (y0 >= z0) {
+			i1 = 1;
+			j1 = 0;
+			k1 = 0;
+			i2 = 1;
+			j2 = 1;
+			k2 = 0;
+		} else if (x0 >= z0) {
+            i1 = 1;
+            j1 = 0;
+            k1 = 0;
+            i2 = 1;
+            j2 = 0;
+            k2 = 1;
+        } else {
+            i1 = 0;
+            j1 = 0;
+            k1 = 1;
+            i2 = 1;
+            j2 = 0;
+            k2 = 1;
+        }
+    } else {
+    	if (y0 < z0) {
+            i1 = 0;
+            j1 = 0;
+            k1 = 1;
+            i2 = 0;
+            j2 = 1;
+            k2 = 1;
+        } else if (x0 < z0) {
+            i1 = 0;
+            j1 = 1;
+            k1 = 0;
+            i2 = 0;
+            j2 = 1;
+            k2 = 1;
+        } else {
+            i1 = 0;
+            j1 = 1;
+            k1 = 0;
+            i2 = 1;
+            j2 = 1;
+            k2 = 0;
+        }
+    }
+
+    float x1 = x0 - i1 + G3;
+    float y1 = y0 - j1 + G3;
+    float z1 = z0 - k1 + G3;
+
+    float x2 = x0 - i2 + 2.0f * G3;
+    float y2 = y0 - j2 + 2.0f * G3;
+    float z2 = z0 - k2 + 2.0f * G3;
+
+    float x3 = x0 - 1.0f + 3.0f * G3;
+    float y3 = y0 - 1.0f + 3.0f * G3;
+    float z3 = z0 - 1.0f + 3.0f * G3;
+
+    int ii = i & 255;
+    int jj = j & 255;
+    int kk = k & 255;
+
+    int gi0 = noise->p[ii +  0 + noise->p[jj +  0 + noise->p[kk +  0]]];
+    int gi1 = noise->p[ii + i1 + noise->p[jj + j1 + noise->p[kk + k1]]];
+    int gi2 = noise->p[ii + i2 + noise->p[jj + j2 + noise->p[kk + k2]]];
+    int gi3 = noise->p[ii +  1 + noise->p[jj +  1 + noise->p[kk +  1]]];
+
+    float t0 = 0.6f - x0 * x0 - y0 * y0 - z0 * z0;
+    if (t0 < 0) {
+    	n0 = 0.0f;
+    } else {
+    	t0 *= t0;
+    	n0 = t0 * t0 * grad3(gi0, x0, y0, z0);
+    }
+
+    float t1 = 0.6f - x1 * x1 - y1 * y1 - z1 * z1;
+    if (t1 < 0) {
+    	n1 = 0.0f;
+    } else {
+        t1 *= t1;
+        n1 = t1 * t1 * grad3(gi1, x1, y1, z1);
+    }
+
+    float t2 = 0.6f - x2 * x2 - y2 * y2 - z2 * z2;
+    if( t2 < 0 ) {
+    	n2 = 0.0f;
+    } else {
+    	t2 *= t2;
+    	n2 = t2 * t2 * grad3(gi2, x2, y2, z2);
+    }
+
+    float t3 = 0.6f - x3 * x3 - y3 * y3 - z3 * z3;
+    if (t3 < 0) {
+    	n3 = 0.0f;
+    } else {
+    	t3 *= t3;
+    	n3 = t3 * t3 * grad3(gi3, x3, y3, z3);
+    }
+    
+    return (32.0f * (n0 + n1 + n2 + n3));
 }
-
-void noise3Seed(t_noise3 * noise, unsigned int seed) {
-	noise->seed = seed;
-	memcpy(noise->p, default_permutation, sizeof(default_permutation));
-}
-
-void noise3Delete(t_noise3 * noise) {
-	free(noise);
-}
-
-float noise3(t_noise3 * noise, float x, float y, float z) {
-
-	int fx = fastfloor(x);
-	int fy = fastfloor(y);
-	int fz = fastfloor(z);
-
-	unsigned char X = fx & 255;
-	unsigned char Y = fy & 255;
-	unsigned char Z = fz & 255;
-
-	x -= fx;
-	y -= fy;
-	z -= fz;
-
-	float u = fade(x);
-	float v = fade(y);
-	float w = fade(z);
-
-	unsigned char * p = noise->p;
-
-	unsigned char A  = p[X] + Y;
-	unsigned char AA = p[A] + Z;
-	unsigned char AB = p[A + 1] + Z;
-	unsigned char B  = p[X + 1] + Y;
-	unsigned char BA = p[B] + Z;
-	unsigned char BB = p[B + 1] + Z;
-
-	return (lerp(w, lerp(v, lerp(u,  grad3(p[AA    ],     x,     y, z),
-                                     grad3(p[BA    ], x - 1,     y, z)),
-                             lerp(u, grad3(p[AB    ],     x, y - 1, z),
-                                     grad3(p[BB    ], x - 1, y - 1, z))),
-                     lerp(v, lerp(u, grad3(p[AA + 1],     x,     y, z - 1),
-                                     grad3(p[BA + 1], x - 1,     y, z - 1)),
-                             lerp(u, grad3(p[AB + 1],     x, y - 1, z - 1 ),
-                                     grad3(p[BB + 1], x - 1, y- 1 , z - 1)))));
-}
-*/

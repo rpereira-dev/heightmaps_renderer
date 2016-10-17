@@ -11,7 +11,18 @@ void worldInit(t_world * world) {
 	}
 
 	//noise creation
-	world->noise = noise2New();
+	int i;
+	for (i = 0 ; i < WORLD_OCTAVES ; i++) {
+		world->octaves[i] = noiseNew();
+		noiseSeed(world->octaves[i], time(NULL) * i * 317);
+	}
+
+	long long unsigned int seed = time(NULL);
+	for (i = 0 ; i < WORLD_OCTAVES ; i++) {
+		world->octaves[i] = noiseNew();
+		noiseNextInt(&seed);
+		noiseSeed(world->octaves[i], seed);
+	}
 
 /*
 	terrain = terrainNew(0, 0);
@@ -25,7 +36,11 @@ void worldInit(t_world * world) {
 void worldDelete(t_world * world) {
 	hmap_delete(world->terrains);
 	free(world->terrains);
-	noise2Delete(world->noise);
+
+	int i;
+	for (i = 0 ; i < WORLD_OCTAVES ; i++) {
+		noiseDelete(world->octaves[i]);
+	}
 }
 
 void worldGetGridIndex(t_world * world, float worldX, float worldZ, int * gridX, int * gridY) {
@@ -98,11 +113,11 @@ static void worldUpdateLists(t_world * world, t_renderer * renderer, t_camera * 
 		if (distance > TERRAIN_KEEP_LOADED_DISTANCE) {
 			array_list_add(renderer->delete_list, &terrain);
 		} else if (distance < TERRAIN_RENDER_DISTANCE) {
-			float dot = vec3f_dot_product(&(camera->vview), &diff);
-			float angle = acos(dot);
-			if (distance <= 2 || angle < camera->fov + 0.01f) {
+			//float dot = vec3f_dot_product(&(camera->vview), &diff);
+			//float angle = acos(dot);
+			//if (distance <= 2 || angle < camera->fov + 0.01f) {
 				array_list_add(renderer->render_list, &terrain);
-			}
+			//}
 		}
 	}
 	HMAP_ITER_END(world->terrains, t_terrain *, terrain);

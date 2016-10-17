@@ -102,7 +102,7 @@ static void inputUpdateDebug(t_glh_context * context, t_world * world, t_rendere
 
 static void inputUpdateCamera(t_camera * camera) {
 
-	static float movespeed = 4.0f;
+	static float movespeed = 0.5f;
 	static float rotspeed = 1.0f;
 
 	t_glh_window * win = glhGetWindow();
@@ -138,7 +138,14 @@ static void inputUpdateCamera(t_camera * camera) {
 
 static void inputUpdateWorld(t_glh_window * win, t_world * world) {
 	if (glfwGetKey(win->pointer, GLFW_KEY_P) == GLFW_PRESS) {
-		noise2Seed(world->noise, time(NULL));
+		
+		int i;
+		long long unsigned int seed = time(NULL);
+		for (i = 0 ; i < WORLD_OCTAVES ; i++) {
+			noiseNextInt(&seed);
+			noiseSeed(world->octaves[i], seed);
+		}
+
 		HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
 			terrainGenerate(world, terrain);
 		}

@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
     	//render
     	rendererRender(context, &world, &renderer, &camera);
     	
-    	//glhCheckError("post rendererUpdate()");
+    	glhCheckError("post rendererUpdate()");
 
     	long t2;
     	MICROSEC(t2);

@@ -2,17 +2,23 @@
 
 GLuint u_mvp_matrix;
 GLuint u_transf_matrix;
+GLuint u_fog_density;
+GLuint u_fog_gradient;
+GLuint u_sky_color;
 
 static void rendererBindAttributes(t_glh_program * program) {
 	glhProgramBindAttribute(program, 0, "pos");
-	glhProgramBindAttribute(program, 1, "color");
-	//glhProgramBindAttribute(program, 1, "normal");
-	//glhProgramBindAttribute(program, 2, "color");
+	glhProgramBindAttribute(program, 1, "height");
+	glhProgramBindAttribute(program, 2, "normal");
+	glhProgramBindAttribute(program, 3, "color");
 }
 
 static void rendererLinkUniforms(t_glh_program * program) {
 	u_mvp_matrix = glhProgramGetUniform(program, "mvp_matrix");
 	u_transf_matrix = glhProgramGetUniform(program, "transf_matrix");
+	u_fog_density = glhProgramGetUniform(program, "fog_density");
+	u_fog_gradient = glhProgramGetUniform(program, "fog_gradient");
+	u_sky_color = glhProgramGetUniform(program, "sky_color");
 }
 
 static void rendererGenerateBufferIndices(t_renderer * renderer) {
@@ -132,7 +138,7 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	ARRAY_LIST_ITER_END(renderer->delete_list, t_terrain *, terrain, i);
 
     //clear color buffer
-    glhClearColor(119 / 255.0f, 181 / 255.0f, 254 / 255.0f, 1.0f);
+    glhClearColor(0.46f, 0.70f, 0.99f, 1.0f);
     glhClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//bind the program
@@ -140,6 +146,11 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 
 	//load uniforms
 	glhProgramLoadUniformMatrix4f(u_mvp_matrix, (float*)&(camera->mviewproj));
+
+	//weather
+	glhProgramLoadUniformFloat(u_fog_gradient, 3.5f);
+	glhProgramLoadUniformFloat(u_fog_density, 0.0006f);
+	glhProgramLoadUniformVec3(u_sky_color, 0.46f, 0.70f, 0.99f);
 
 	//debug
 	if (glfwGetKey(context->window->pointer, GLFW_KEY_F) == GLFW_PRESS) {

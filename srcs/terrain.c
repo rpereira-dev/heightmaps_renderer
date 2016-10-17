@@ -1,16 +1,17 @@
 #include "renderer.h"
 
 static float terrainGetHeight(float vertices[], int x, int y) {
-	return (vertices[(x * TERRAIN_DETAIL + y) * 4]);
+	return (vertices[(x * TERRAIN_DETAIL + y) * TERRAIN_FLOATS_PER_VERTEX]);
 }
 
 static void terrainCalculateNormal(float vertices[], t_vec3f * normal, int x, int z) {
 
 	float xy_height = terrainGetHeight(vertices, x, z);
-	float left	= (x - 1 >= 0) 				? terrainGetHeight(vertices, x - 1, z) : xy_height;
-	float right	= (x + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x + 1, z) : xy_height;
-	float down	= (z - 1 >= 0) 				? terrainGetHeight(vertices, x, z - 1) : xy_height;
-	float up 	= (z + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x, z + 1) : xy_height;
+	float left	= (x - 1 >= 0) 				? terrainGetHeight(vertices, x - 1, z) : xy_height + xy_height - terrainGetHeight(vertices, x + 1, z);
+	float right	= (x + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x + 1, z) : xy_height + xy_height - terrainGetHeight(vertices, x - 1, z);
+	float down	= (z - 1 >= 0) 				? terrainGetHeight(vertices, x, z - 1) : xy_height + xy_height - terrainGetHeight(vertices, x, z + 1);
+	float up 	= (z + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x, z + 1) : xy_height + xy_height - terrainGetHeight(vertices, x, z - 1);
+
 	vec3f_set(normal, left - right, 2.0f, down - up);
 	vec3f_normalize(normal, normal);
 }
@@ -18,38 +19,54 @@ static void terrainCalculateNormal(float vertices[], t_vec3f * normal, int x, in
 static void terrainGenerateNormals(float vertices[]) {
 	t_vec3f normal;
 
-	int x, z;
+	int x, y;
 	int i = 0;
 	for (x = 0 ; x < TERRAIN_DETAIL ; x++) {
-		for (z = 0 ; z < TERRAIN_DETAIL; z++) {
+		for (y = 0 ; y < TERRAIN_DETAIL; y++) {
 
 			//calculate the normal
-			terrainCalculateNormal(vertices, &normal, x, z);
+			terrainCalculateNormal(vertices, &normal, x, y);
 			++i; //skip height
 			vertices[i++] = normal.x;
 			vertices[i++] = normal.y;
 			vertices[i++] = normal.z;
+			++i; //skip color r
+			++i; //skip color g
+			++i; //skip color b
 		}
 	}
 }
 
-float clamp(float val, float min, float max) {
+static float clamp(float val, float min, float max) {
 	if (val > max) {
 		return (max);
 	}
     return (val < min ? min : val);
 }
 
-static float terrainGenerateHeightAt(t_world * world, int gridX, int gridY, int x, int y) {
+static void terrainGenerateColorAt(t_world * world, t_vec3f * color, float wx, float wy, float wz) {
+	(void)world;
+	(void)color;
+	(void)wx;
+	(void)wy;
+
+	float s = 0.01f;
+	float region = noise3(world->octaves[0], wx * s, wy * s, wz * s);
+	if (region < 0) {
+		vec3f_set(color, 1, 0, 0);
+	} else {
+		vec3f_set(color, 0, 1, 0);
+	}
+}
+
+static float terrainGenerateHeightAt(t_world * world, float wx, float wz) {
 
 	float height = 0;
     float layerF = 0.008f;
     float weight = 1;
     int i = 0;
-    int posx = gridX * (TERRAIN_DETAIL - 1) + x;
-    int posy = gridY * (TERRAIN_DETAIL - 1) + y;
     for (i = 0 ; i < 3 ; i++) {
-		height += noise2(world->noise, posx * layerF, posy * layerF) * weight;
+		height += noise2(world->octaves[i], wx * layerF, wz * layerF) * weight;
         layerF *= 3.5f;
         weight *= 0.5f;
     }
@@ -59,15 +76,29 @@ static float terrainGenerateHeightAt(t_world * world, int gridX, int gridY, int 
 }
 
 static void terrainGenerateVertices(t_world * world, float vertices[], int gridX, int gridY,
-										float (*heightGen)(t_world *, int, int, int, int)) {
-	int x, z;
+										float (*heightGen)(t_world *, float, float),
+										void (*colorGen)(t_world *, t_vec3f *, float, float, float)) {
+	t_vec3f color;
+	int x, y;
 	int i = 0;
 	for (x = 0 ; x < TERRAIN_DETAIL ; x++) {
-		for (z = 0 ; z < TERRAIN_DETAIL; z++) {
-			vertices[i++] = heightGen(world, gridX, gridY, x, z);
+		for (y = 0 ; y < TERRAIN_DETAIL; y++) {
+
+			float wx = gridX * (TERRAIN_DETAIL - 1) + x;
+			float wz = gridY * (TERRAIN_DETAIL - 1) + y;
+			float wy = heightGen(world, wx, wz);
+			colorGen(world, &color, wx, wy, wz);
+
+			vertices[i++] = wy;
+
 			++i; //skip normalx
 			++i; //skip normaly
 			++i; //skip normalz
+
+			//generate color
+			vertices[i++] = color.r;
+			vertices[i++] = color.g;
+			vertices[i++] = color.b;
 		}
 	}
 }
@@ -77,7 +108,7 @@ static void terrainUpdateVBO(t_terrain * terrain, float vertices[]) {
 
 	//bind it to gpu
 	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * 4 * sizeof(float), vertices, GL_STATIC_DRAW);
+	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_FLOATS_PER_VERTEX * sizeof(float), vertices, GL_STATIC_DRAW);
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 }
 
@@ -96,10 +127,10 @@ void terrainGenerate(t_world * world, t_terrain * terrain) {
 	int gridX = terrain->index.x;
 	int gridY = terrain->index.y;
 
-	float vertices[TERRAIN_DETAIL * TERRAIN_DETAIL * 4];
+	float vertices[TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_FLOATS_PER_VERTEX];
 
 	//generate vertices
-	terrainGenerateVertices(world, vertices, gridX, gridY, terrainGenerateHeightAt);
+	terrainGenerateVertices(world, vertices, gridX, gridY, terrainGenerateHeightAt, terrainGenerateColorAt);
 	terrainGenerateNormals(vertices);
 	//update the vbo
 	terrainUpdateVBO(terrain, vertices);
@@ -136,9 +167,13 @@ t_terrain * terrainNew(t_renderer * renderer, int gridX, int gridY) {
 
 	//bind vertices
 	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-	glhVAOSetAttribute(1, 4, GL_FLOAT, 0, 4 * sizeof(float), NULL); //height + normal
+	glhVAOSetAttribute(1, 1, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), NULL); //height
+	glhVAOSetAttribute(2, 3, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), (void*)(1 * sizeof(float))); //normal
+	glhVAOSetAttribute(3, 3, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), (void*)((3 + 1) * sizeof(float))); //color
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 	glhVAOEnableAttribute(1);
+	glhVAOEnableAttribute(2);
+	glhVAOEnableAttribute(3);
 
 	//unbind vao
 	glhVAOUnbind();

@@ -6,27 +6,19 @@
 # include <time.h>
 # include <stdio.h>
 
-/** 2d noise */
-typedef struct	s_noise2 {
-	unsigned int	seed;
-	unsigned char	p[512];
-	unsigned char	pmod12[512];
-}				t_noise2;
+/** noise */
+typedef struct	s_noise {
+	long long unsigned int	seed;
+	unsigned char			p[512];
+}				t_noise;
 
-t_noise2 * 	noise2New(void);
-void 		noise2Seed(t_noise2 * noise, unsigned int seed);
-void 		noise2Delete(t_noise2 * noise);
-float		noise2(t_noise2 * noise, float x, float y);
+t_noise * 	noiseNew(void);
+void 		noiseSeed(t_noise * noise, long long unsigned int seed);
+void 		noiseDelete(t_noise * noise);
 
-/** 3d noise */
-typedef struct	s_noise3 {
-	unsigned int	seed;
-	unsigned char	p[512];
-}				t_noise3;
+float		noise2(t_noise * noise, float x, float y);
+float		noise3(t_noise * noise, float x, float y, float z);
 
-t_noise3 *	noise3New(void);
-void		noise3Seed(t_noise3 * noise, unsigned int seed);
-void 		noise3Delete(t_noise3 * noise);
-float		noise3(t_noise3 * noise, float x, float y, float z);
+unsigned int	noiseNextInt(long long unsigned int * seed);
 
 #endif

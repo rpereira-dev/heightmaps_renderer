@@ -29,13 +29,15 @@ typedef struct	s_camera {
 //terrain detail (number of vertex per line)
 # define TERRAIN_DETAIL (16)
 //terrain width (and height)
-# define TERRAIN_SIZE (256)
+# define TERRAIN_SIZE (16)
 // number of terrain to render in term of distance
 # define TERRAIN_RENDER_DISTANCE (10)
 // distance where terrain are kept loaded in memory
 # define TERRAIN_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE)
 // distance where terrain are kept loaded in memory
 # define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE)
+// number of floats per vertex
+# define TERRAIN_FLOATS_PER_VERTEX (3 + 3 + 1)
 
 /** a terrain */
 typedef struct 	s_terrain {
@@ -44,10 +46,12 @@ typedef struct 	s_terrain {
 	GLuint vbo;
 }				t_terrain;
 
+# define WORLD_OCTAVES (4)
+
 /** the world */
 typedef struct 	s_world {
-	t_hmap *	terrains;
-	t_noise2 *	noise;
+	t_hmap 		* terrains;
+	t_noise		* octaves[WORLD_OCTAVES];
 }				t_world;
 
 /** the renderer part of the program */
