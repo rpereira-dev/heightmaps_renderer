@@ -5,6 +5,7 @@ GLuint u_transf_matrix;
 GLuint u_fog_density;
 GLuint u_fog_gradient;
 GLuint u_sky_color;
+GLuint u_state;
 
 static void rendererBindAttributes(t_glh_program * program) {
 	glhProgramBindAttribute(program, 0, "pos");
@@ -19,6 +20,7 @@ static void rendererLinkUniforms(t_glh_program * program) {
 	u_fog_density = glhProgramGetUniform(program, "fog_density");
 	u_fog_gradient = glhProgramGetUniform(program, "fog_gradient");
 	u_sky_color = glhProgramGetUniform(program, "sky_color");
+	u_state = glhProgramGetUniform(program, "state");
 }
 
 static void rendererGenerateBufferIndices(t_renderer * renderer) {
@@ -86,6 +88,8 @@ void rendererInit(t_renderer * renderer) {
 	//create the program
 	renderer->program = glhProgramNew();
 
+	renderer->state = 0;
+
 	//load shaders
 	GLuint fs = glhShaderLoad("./shaders/model.fs", GL_FRAGMENT_SHADER);
 	GLuint vs = glhShaderLoad("./shaders/model.vs", GL_VERTEX_SHADER);
@@ -149,8 +153,11 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 
 	//weather
 	glhProgramLoadUniformFloat(u_fog_gradient, 3.5f);
-	glhProgramLoadUniformFloat(u_fog_density, 0.0006f);
-	glhProgramLoadUniformVec3(u_sky_color, 0.46f, 0.70f, 0.99f);
+	glhProgramLoadUniformFloat(u_fog_density, 0.007f);
+	glhProgramLoadUniformVec3f(u_sky_color, 0.46f, 0.70f, 0.99f);
+
+	//load state
+	glhProgramLoadUniformInt(u_state, renderer->state);
 
 	//debug
 	if (glfwGetKey(context->window->pointer, GLFW_KEY_F) == GLFW_PRESS) {

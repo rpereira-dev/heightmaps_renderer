@@ -95,11 +95,11 @@ void 			glhProgramLink(t_glh_program * program, void (*fbindAttributes)(t_glh_pr
 void 			glhProgramDelete(t_glh_program * program);
 void			glhProgramUse(t_glh_program * program);
 void			glhProgramBindAttribute(t_glh_program * program, int attribute, char * name);
-void			glhProgramLoadUniformInteger(int location, int value);
+void			glhProgramLoadUniformInt(int location, int value);
 void 			glhProgramLoadUniformFloat(int location, float value);
-void 			glhProgramLoadUniformVec2(int location, float x, float y);
-void 			glhProgramLoadUniformVec3(int location, float x, float y, float z);
-void 			glhProgramLoadUniformVec4(int location, float x, float y, float z, float w);
+void 			glhProgramLoadUniformVec2f(int location, float x, float y);
+void 			glhProgramLoadUniformVec3f(int location, float x, float y, float z);
+void 			glhProgramLoadUniformVec4f(int location, float x, float y, float z, float w);
 void 			glhProgramLoadUniformMatrix4f(int location, float * mat4);
 int 			glhProgramGetUniform(t_glh_program * program, char * name);
 

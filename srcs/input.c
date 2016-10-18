@@ -153,10 +153,23 @@ static void inputUpdateWorld(t_glh_window * win, t_world * world) {
 	}
 }
 
+static void inputUpdateRenderer(t_glh_window * win, t_renderer * renderer) {
+	renderer->state = 0;
+	
+	if (glfwGetKey(win->pointer, GLFW_KEY_V) == GLFW_PRESS) {
+		renderer->state = renderer->state | STATE_APPLY_FOG;
+	}
+
+	if (glfwGetKey(win->pointer, GLFW_KEY_B) == GLFW_PRESS) {
+		renderer->state = renderer->state | STATE_APPLY_PHONG_LIGHTNING;
+	}
+}
+
 void inputUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
 	inputUpdateCamera(camera);
 	inputUpdateDebug(context, world, renderer, camera);
 	inputUpdateWorld(context->window, world);
+	inputUpdateRenderer(context->window, renderer);
 }
 
 void inputInit(t_glh_context * context) {

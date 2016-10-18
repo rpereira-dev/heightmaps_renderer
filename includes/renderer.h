@@ -39,6 +39,9 @@ typedef struct	s_camera {
 // number of floats per vertex
 # define TERRAIN_FLOATS_PER_VERTEX (3 + 3 + 1)
 
+# define STATE_APPLY_FOG (1)
+# define STATE_APPLY_PHONG_LIGHTNING (2)
+
 /** a terrain */
 typedef struct 	s_terrain {
 	t_vec2i index;
@@ -61,6 +64,7 @@ typedef struct 	s_renderer {
 	GLuint 			terrain_vertices; //terrain vertices buffer (static grid)
 	t_array_list 	* render_list; //the list of terrain to render
 	t_array_list 	* delete_list; //the list of terrain to delete
+	int 			state; //the state for rendering
 }				t_renderer;
 
 //renderer related functions

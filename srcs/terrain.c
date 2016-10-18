@@ -57,6 +57,8 @@ static void terrainGenerateColorAt(t_world * world, t_vec3f * color, float wx, f
 	} else {
 		vec3f_set(color, 0, 1, 0);
 	}
+
+	vec3f_set(color, 1, 1, 1);
 }
 
 static float terrainGenerateHeightAt(t_world * world, float wx, float wz) {

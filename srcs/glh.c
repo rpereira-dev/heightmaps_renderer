@@ -241,7 +241,7 @@ void glhProgramBindAttribute(t_glh_program * program, int attribute, char * name
 	glBindAttribLocation(program->id, attribute, name);
 }
 
-void glhProgramLoadUniformInteger(int location, int value) {
+void glhProgramLoadUniformInt(int location, int value) {
 	glUniform1i(location, value);
 }
 
@@ -249,15 +249,15 @@ void glhProgramLoadUniformFloat(int location, float value) {
 	glUniform1f(location, value);
 }
 
-void glhProgramLoadUniformVec2(int location, float x, float y) {
+void glhProgramLoadUniformVec2f(int location, float x, float y) {
 	glUniform2f(location, x, y);
 }
 
-void glhProgramLoadUniformVec3(int location, float x, float y, float z) {
+void glhProgramLoadUniformVec3f(int location, float x, float y, float z) {
 	glUniform3f(location, x, y, z);
 }
 
-void glhProgramLoadUniformVec4(int location, float x, float y, float z, float w) {
+void glhProgramLoadUniformVec4f(int location, float x, float y, float z, float w) {
 	glUniform4f(location, x, y, z, w);
 }
 
