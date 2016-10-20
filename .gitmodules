@@ -7,3 +7,6 @@
 [submodule "libs/glfw"]
 	path = libs/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "libs/tinycthread"]
+	path = libs/tinycthread
+	url = https://github.com/tinycthread/tinycthread.git

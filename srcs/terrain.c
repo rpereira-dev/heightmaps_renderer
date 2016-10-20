@@ -37,7 +37,7 @@ static void terrainGenerateNormals(float vertices[]) {
 	}
 }
 
-static float clamp(float val, float min, float max) {
+float clamp(float val, float min, float max) {
 	if (val > max) {
 		return (max);
 	}
@@ -50,30 +50,23 @@ static void terrainGenerateColorAt(t_world * world, t_vec3f * color, float wx, f
 	(void)wx;
 	(void)wy;
 
-	float s = 0.01f;
-	float region = noise3(world->octaves[0], wx * s, wy * s, wz * s);
+	float region = noise3(world->octaves[0], wx * 0.001f, wy * 0.001f, wz * 0.001f);
+	float gradient = noise3(world->octaves[1], wx, wy, wz) * 0.05f;
+	//desert
 	if (region < 0) {
-		vec3f_set(color, 1, 0, 0);
+		vec3f_set(color, 0.3f, 0.28f, 0.19f);
 	} else {
 		vec3f_set(color, 0, 1, 0);
 	}
 
-	vec3f_set(color, 1, 1, 1);
+	vec3f_mult(color, color, 1 - gradient);
 }
 
 static float terrainGenerateHeightAt(t_world * world, float wx, float wz) {
-
 	float height = 0;
-    float layerF = 0.008f;
-    float weight = 1;
-    int i = 0;
-    for (i = 0 ; i < 3 ; i++) {
-		height += noise2(world->octaves[i], wx * layerF, wz * layerF) * weight;
-        layerF *= 3.5f;
-        weight *= 0.5f;
-    }
-
-	height = clamp(height, -0.9, 0.9);
+	height += noise2(world->octaves[0], wx * 0.001f, wz * 0.001f) * 16.4f;
+	height += noise2(world->octaves[0], wx * 0.01f, wz * 0.01f) * 2.4f;
+	height += noise2(world->octaves[1], wx * 16.0f, wz * 16.0f) * 0.01f;
 	return (height);
 }
 
@@ -105,15 +98,6 @@ static void terrainGenerateVertices(t_world * world, float vertices[], int gridX
 	}
 }
 
-//update the vbo
-static void terrainUpdateVBO(t_terrain * terrain, float vertices[]) {
-
-	//bind it to gpu
-	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-	glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_FLOATS_PER_VERTEX * sizeof(float), vertices, GL_STATIC_DRAW);
-	glhVBOUnbind(GL_ARRAY_BUFFER);
-}
-
 /** generate n terrain from the given bmp map file, and return them */
 void terrainLoadvertices(t_terrain * terrains, int * n, char const * bmpfile) {
 	(void)terrains;
@@ -124,23 +108,15 @@ void terrainLoadvertices(t_terrain * terrains, int * n, char const * bmpfile) {
 }
 
 void terrainGenerate(t_world * world, t_terrain * terrain) {
-
-	//the world's terrain index
 	int gridX = terrain->index.x;
 	int gridY = terrain->index.y;
-
-	float vertices[TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_FLOATS_PER_VERTEX];
-
-	//generate vertices
-	terrainGenerateVertices(world, vertices, gridX, gridY, terrainGenerateHeightAt, terrainGenerateColorAt);
-	terrainGenerateNormals(vertices);
-	//update the vbo
-	terrainUpdateVBO(terrain, vertices);
+	terrain->vertices = (float *) malloc(sizeof(float) * TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_FLOATS_PER_VERTEX);
+	terrainGenerateVertices(world, terrain->vertices, gridX, gridY, terrainGenerateHeightAt, terrainGenerateColorAt);
+	terrainGenerateNormals(terrain->vertices);
 }
 
-
 /** allocate a new terrain on heap + gpu */
-t_terrain * terrainNew(t_renderer * renderer, int gridX, int gridY) {
+t_terrain * terrainNew(t_world * world, int gridX, int gridY) {
 
 	//allocate the terrain
 	t_terrain * terrain = (t_terrain*)malloc(sizeof(t_terrain));
@@ -150,42 +126,15 @@ t_terrain * terrainNew(t_renderer * renderer, int gridX, int gridY) {
 
 	terrain->index.x = gridX;
 	terrain->index.y = gridY;
+	terrain->vertices = NULL;
+	terrain->initialized = 0;
 
-	//allocate terrain model on GPU
-	terrain->vao = glhVAOGen();
-	terrain->vbo = glhVBOGen();
-
-	//bind vao
-	glhVAOBind(terrain->vao);
-
-	//bind indices
-	glhVBOBind(GL_ELEMENT_ARRAY_BUFFER, renderer->terrain_indices);
-
-	//bind static grid
-	glhVBOBind(GL_ARRAY_BUFFER, renderer->terrain_vertices);
-	glhVAOSetAttribute(0, 2, GL_FLOAT, 0, 2 * sizeof(float), NULL); //default vertices
-	glhVBOUnbind(GL_ARRAY_BUFFER);
-	glhVAOEnableAttribute(0);
-
-	//bind vertices
-	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-	glhVAOSetAttribute(1, 1, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), NULL); //height
-	glhVAOSetAttribute(2, 3, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), (void*)(1 * sizeof(float))); //normal
-	glhVAOSetAttribute(3, 3, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), (void*)((3 + 1) * sizeof(float))); //color
-	glhVBOUnbind(GL_ARRAY_BUFFER);
-	glhVAOEnableAttribute(1);
-	glhVAOEnableAttribute(2);
-	glhVAOEnableAttribute(3);
-
-	//unbind vao
-	glhVAOUnbind();
+	terrainGenerate(world, terrain);
 
 	return (terrain);
 }
 
 /** delete a terrain from memory (heap + gpu)*/
 void terrainDelete(t_terrain * terrain) {
-	glhVAODelete(terrain->vao);
-	glhVBODelete(terrain->vbo);
 	free(terrain);
 }

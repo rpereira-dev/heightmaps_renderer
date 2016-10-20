@@ -11,6 +11,32 @@ void printUsage(char * binary, FILE * dst) {
 	fprintf(dst, "\t./%s -t \"texture.bmp\" -h 12\n", binary);
 }
 
+static int threadLoop(void * e) {
+	t_env 			* env 		= (t_env *) e;
+	t_glh_context 	* context 	= env->context;
+	t_renderer 		* renderer 	= &(env->renderer);
+	t_world 		* world 	= &(env->world);
+	t_camera 		* camera 	= &(env->camera);
+
+	(void)env;
+	(void)world;
+	(void)camera;
+
+	printf("Thread loop started!\n");
+
+	while (env->is_running) {
+		//update the camera and the world
+    	worldUpdate(context, world, renderer, camera);
+
+    	usleep(20 * 1000);
+
+	}
+
+	printf("Thread loop stopped!\n");
+
+	return (0);
+}
+
 int main(int argc, char **argv) {
 
 	//get binary name
@@ -49,8 +75,12 @@ int main(int argc, char **argv) {
 	glhInit();
 
 	printf("Creating gl context...\n");
+    t_env env;
 
-	t_glh_context * context = glhCreateContext();
+	env.context = glhCreateContext();
+
+	t_glh_context * context	= env.context;
+
 	if (context == NULL) {
 		fprintf(stderr, "Failed to create gl context.\n");
 		return (EXIT_FAILURE);
@@ -64,28 +94,34 @@ int main(int argc, char **argv) {
 	printf("Making gl context current...\n");
     glhMakeContextCurrent(context);
 
-	t_world world;
-	t_renderer renderer;
-	t_camera camera;
+	t_world * world 		= &(env.world);
+	t_renderer * renderer 	= &(env.renderer);
+	t_camera * camera 		= &(env.camera);
+    thrd_t * thrd 			= &(env.thrd);
 
 	printf("Initializing camera...\n");
-	cameraInit(&camera);
+	cameraInit(camera);
 
 	printf("Initializing renderer...\n");
-	rendererInit(&renderer);
+	rendererInit(renderer);
 
 	printf("Initializing inputs...\n");
 	inputInit(context);
 
 	printf("Initializing world...\n");
-	worldInit(&world);
+	worldInit(world);
 
-	printf("Loop started...\n");
+	printf("Creating calculator thread...\n");
+  	thrd_create(thrd, threadLoop, &env);
+
+	printf("Rendering started...\n");
 
 	long int total = 0;
 	long int count = 0;
 
-    while (!glhWindowShouldClose(context->window)) {
+	env.is_running = 1;
+
+    while (!glhWindowShouldClose(context->window) && env.is_running) {
 
     	long t1;
     	MICROSEC(t1);
@@ -94,17 +130,16 @@ int main(int argc, char **argv) {
     	glhWindowUpdate(context->window);
 
     	//input
-    	inputUpdate(context, &world, &renderer, &camera);
+    	inputUpdate(context, world, renderer, camera);
     	
-    	//update the camera and the world
-    	cameraUpdate(context, &world, &renderer, &camera);
-    	worldUpdate(context, &world, &renderer, &camera);
+    	//camera
+ 	    cameraUpdate(context, world, renderer, camera);
 
     	//update the renderer
-    	rendererUpdate(context, &world, &renderer, &camera);
+    	rendererUpdate(context, world, renderer, camera);
 
     	//render
-    	rendererRender(context, &world, &renderer, &camera);
+    	rendererRender(context, world, renderer, camera);
     	
     	glhCheckError("post rendererUpdate()");
 
@@ -118,16 +153,22 @@ int main(int argc, char **argv) {
     	glhSwapBuffer(context->window);
     }
 
+	env.is_running = 0;
+
+    //wait for calculator thread to finish
+    printf("Waiting for thread to finish...\n");
+    thrd_join(env.thrd, NULL);
+
 	printf("Loop ended\n");
 
 	printf("Deleting camera...\n");
-	cameraDelete(&camera);
+	cameraDelete(camera);
 
 	printf("Deleting world...\n");
-	worldDelete(&world);
+	worldDelete(world);
 
 	printf("Deleting renderer...\n");
-	rendererDelete(&renderer);
+	rendererDelete(renderer);
 
 	printf("Destroying gl context..\n");
     glhDestroyContext(context);

@@ -3,8 +3,11 @@
 
 # include "array_list.h"
 # include "hmap.h"
+# include "cmaths.h"
 # include "vec.h"
+# include "mat.h"
 # include "glh.h"
+# include "tinycthread.h"
 # include "noise.h"
 # include <string.h>
 # include <fcntl.h>
@@ -29,13 +32,13 @@ typedef struct	s_camera {
 //terrain detail (number of vertex per line)
 # define TERRAIN_DETAIL (16)
 //terrain width (and height)
-# define TERRAIN_SIZE (16)
+# define TERRAIN_SIZE (24)
 // number of terrain to render in term of distance
-# define TERRAIN_RENDER_DISTANCE (10)
+# define TERRAIN_RENDER_DISTANCE (32)
 // distance where terrain are kept loaded in memory
-# define TERRAIN_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE)
+# define TERRAIN_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE + 16)
 // distance where terrain are kept loaded in memory
-# define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE)
+# define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_LOADED_DISTANCE + 16)
 // number of floats per vertex
 # define TERRAIN_FLOATS_PER_VERTEX (3 + 3 + 1)
 
@@ -44,9 +47,11 @@ typedef struct	s_camera {
 
 /** a terrain */
 typedef struct 	s_terrain {
-	t_vec2i index;
-	GLuint vao;
-	GLuint vbo;
+	t_vec2i	index;
+	GLuint 	vao;
+	GLuint 	vbo;
+	float 	* vertices;
+	int 	initialized;
 }				t_terrain;
 
 # define WORLD_OCTAVES (4)
@@ -67,6 +72,15 @@ typedef struct 	s_renderer {
 	int 			state; //the state for rendering
 }				t_renderer;
 
+typedef struct 	s_env {
+	t_glh_context 	* context;
+	t_world			world;
+	t_renderer		renderer;
+	t_camera		camera;
+	thrd_t 			thrd;
+	int 			is_running;
+}				t_env;
+
 //renderer related functions
 void rendererInit(t_renderer * renderer);
 void rendererDelete(t_renderer * renderer);
@@ -79,14 +93,12 @@ void 		worldDelete(t_world * world);
 void 		worldUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera);
 void 		worldGetGridIndex(t_world * world, float worldX, float worldZ, int * gridX, int * gridY);
 t_terrain * worldGetTerrain(t_world * world, int gridX, int gridY);
-void		worldRemoveTerrain(t_world * world, t_terrain * terrain);
 //terrains
-t_terrain *	terrainNew(t_renderer * renderer, int gridX, int gridY);
-void 		terrainDelete(t_terrain * terrain);
+t_terrain *	terrainNew(t_world * world, int gridX, int gridY);
 int 		terrainHash(t_terrain * terrain);
 int 		terrainCmp(t_terrain * left, t_terrain * right);
-void 		terrainGenerate(t_world * world, t_terrain * terrain);
 void		terrainLoadHeightMap(t_terrain * terrains, int * n, char const * bmpfile);
+void 		terrainGenerate(t_world * world, t_terrain * terrain);
 
 //camera related functions
 void cameraInit(t_camera * camera);

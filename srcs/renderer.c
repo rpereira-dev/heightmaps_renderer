@@ -115,31 +115,117 @@ void rendererInit(t_renderer * renderer) {
 	glhCheckError("post rendererInit()");
 }
 
-void rendererDelete(t_renderer * renderer) {
-	glhProgramDelete(renderer->program);
-	glhVBODelete(renderer->terrain_indices);
-	glhVBODelete(renderer->terrain_vertices);
-	array_list_delete(renderer->render_list);
-	array_list_delete(renderer->delete_list);
-	free(renderer->render_list);
-	free(renderer->delete_list);
+static void rendererDeinitTerrain(t_renderer * renderer, t_terrain * terrain) {
+	(void)renderer;
+
+	if (!terrain->initialized) {
+		return ;
+	}
+	terrain->initialized = 0;
+
+	glhVAODelete(terrain->vao);
+	glhVBODelete(terrain->vbo);
+	if (terrain->vertices != NULL) {
+		free(terrain->vertices);
+		terrain->vertices = NULL;
+	}
+	free(terrain);
+}
+
+static void rendererInitTerrain(t_renderer * renderer, t_terrain * terrain) {
+
+	(void)renderer;
+
+	terrain->initialized = 1;
+
+	//allocate terrain model on GPU
+	terrain->vao = glhVAOGen();
+	terrain->vbo = glhVBOGen();
+
+	//bind vao
+	glhVAOBind(terrain->vao);
+
+	//bind indices
+	glhVBOBind(GL_ELEMENT_ARRAY_BUFFER, renderer->terrain_indices);
+
+	//bind static grid
+	glhVBOBind(GL_ARRAY_BUFFER, renderer->terrain_vertices);
+	glhVAOSetAttribute(0, 2, GL_FLOAT, 0, 2 * sizeof(float), NULL); //default vertices
+	glhVBOUnbind(GL_ARRAY_BUFFER);
+	glhVAOEnableAttribute(0);
+
+	//bind buffer
+	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
+	//set attruibutes
+	glhVAOSetAttribute(1, 1, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), NULL); //height
+	glhVAOSetAttribute(2, 3, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), (void*)(1 * sizeof(float))); //normal
+	glhVAOSetAttribute(3, 3, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), (void*)((3 + 1) * sizeof(float))); //color
+	glhVBOUnbind(GL_ARRAY_BUFFER);
+	//enable attributes
+	glhVAOEnableAttribute(1);
+	glhVAOEnableAttribute(2);
+	glhVAOEnableAttribute(3);
+
+	//unbind vao
+	glhVAOUnbind();
+}
+
+static void rendererUpdateLists(t_world * world, t_renderer * renderer, t_camera * camera) {
+
+	(void)camera;
+
+	//clear list
+	array_list_clear(renderer->render_list);
+	array_list_clear(renderer->delete_list);
+
+	//update listst
+	HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
+		
+		t_vec3f diff;
+		diff.x = terrain->index.x - camera->terrain_index.x;
+		diff.y = 0;
+		diff.z = terrain->index.y - camera->terrain_index.y;
+
+			//if to far, delete this terrain
+		if (diff.x > TERRAIN_KEEP_LOADED_DISTANCE || diff.z > TERRAIN_KEEP_LOADED_DISTANCE) {
+			array_list_add(renderer->delete_list, &terrain);
+		} else {
+
+			float distance = vec3f_length(&diff);
+			float normalizer = 1 / distance;
+			diff.x *= normalizer;
+			diff.z *= normalizer;
+			if (distance < TERRAIN_RENDER_DISTANCE) {
+			//float dot = vec3f_dot_product(&(camera->vview), &diff);
+			//float angle = acos_f(dot);
+				//if (distance <= 2 || angle < camera->fov + 0.01f) {
+					array_list_add(renderer->render_list, &terrain);
+				//}
+			}
+		}
+	}
+	HMAP_ITER_END(world->terrains, t_terrain *, terrain);
+
+
+	//remove terrains
+	ARRAY_LIST_ITER_START(renderer->delete_list, t_terrain **, terrain_ptr, i) {
+		t_terrain * terrain = *terrain_ptr;
+		hmap_remove_key(world->terrains, &(terrain->index));
+		rendererDeinitTerrain(renderer, terrain);
+	}
+	ARRAY_LIST_ITER_END(renderer->delete_list, t_terrain **, terrain_ptr, i);
+
+	array_list_clear(renderer->delete_list);
 }
 
 void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
 	(void)context;
-	(void)world;
-	(void)renderer;
-	(void)camera;
+	rendererUpdateLists(world, renderer, camera);
 }
 
 void rendererRender(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
 	(void)context;
-
-	//delete every terrains that has to
-	ARRAY_LIST_ITER_START(renderer->delete_list, t_terrain **, terrain_ptr, i) {
-		worldRemoveTerrain(world, *terrain_ptr);
-	}
-	ARRAY_LIST_ITER_END(renderer->delete_list, t_terrain *, terrain, i);
+	(void)world;
 
     //clear color buffer
     glhClearColor(0.46f, 0.70f, 0.99f, 1.0f);
@@ -166,11 +252,28 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
+	int vertexCount = (TERRAIN_DETAIL - 1) * (TERRAIN_DETAIL - 1) * 6;
+
 	//render every terrain that has to
 	ARRAY_LIST_ITER_START(renderer->render_list, t_terrain **, terrain_ptr, i) {
 
 		//get the terrain
 		t_terrain * terrain = *terrain_ptr;
+
+		//check terrain vertices
+		if (!terrain->initialized) {
+			rendererInitTerrain(renderer, terrain);
+		}
+
+		if (terrain->vertices != NULL) {
+			glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
+			//set vertices
+			glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_FLOATS_PER_VERTEX * sizeof(float), terrain->vertices, GL_STATIC_DRAW);
+			//release data
+			free(terrain->vertices);
+			terrain->vertices = NULL;
+			glhVBOUnbind(GL_ARRAY_BUFFER);
+		}
 
 		//generate the transformation matrix
 		static t_mat4f mat;
@@ -185,10 +288,20 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 		glhVAOBind(terrain->vao);
 
 		//draw it
-		glhDrawElements(GL_TRIANGLES, (TERRAIN_DETAIL - 1) * (TERRAIN_DETAIL - 1) * 6, GL_UNSIGNED_SHORT, NULL);
+		glhDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_SHORT, NULL);
 	}
 	ARRAY_LIST_ITER_END(renderer->render_list, t_terrain *, terrain, i);
 
 	glhVAOUnbind();
 	glhProgramUse(NULL);
+}
+
+
+void rendererDelete(t_renderer * renderer) {
+	glhProgramDelete(renderer->program);
+	glhVBODelete(renderer->terrain_indices);
+	glhVBODelete(renderer->terrain_vertices);
+	array_list_delete(renderer->render_list);
+	array_list_delete(renderer->delete_list);
+	free(renderer->render_list);
 }
