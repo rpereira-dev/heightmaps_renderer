@@ -45,18 +45,33 @@ float clamp(float val, float min, float max) {
 }
 
 static void terrainGenerateColorAt(t_world * world, t_vec3f * color, float wx, float wy, float wz) {
-	(void)world;
-	(void)color;
-	(void)wx;
-	(void)wy;
 
-	float region = noise3(world->octaves[0], wx * 0.001f, wy * 0.001f, wz * 0.001f);
-	float gradient = noise3(world->octaves[1], wx, wy, wz) * 0.05f;
-	//desert
-	if (region < 0) {
-		vec3f_set(color, 0.3f, 0.28f, 0.19f);
+	static t_vec3f blue		= {{0.1f}, {0.2f}, {0.9f}};
+	static t_vec3f green 	= {{0.2f}, {0.9f}, {0.14f}};
+	static t_vec3f brown	= {{0.4f}, {0.35f}, {0.25f}};
+	static t_vec3f gray		= {{0.6f}, {0.6f}, {0.6f}};
+	static t_vec3f white	= {{0.95f}, {0.95f}, {0.95f}};
+
+	float gradient = noise3(world->octaves[1], wx * 16, wy * 16, wz * 16) * 0.05f;
+
+	if (wy <= -10) {
+		vec3f_set3(color, &blue);
+	} else if (wy <= -6.0f) {
+		vec3f_mix(color, &blue, &green, 1 - (wy + 10.0f) / 4.0f);
+	} else if (wy <= 3) {
+		vec3f_set3(color, &green);
+	} else if (wy <= 7) {
+		vec3f_mix(color, &green, &brown, 1 - (wy - 3.0f) / 4.0f);
+	} else if (wy <= 9) {
+		vec3f_set3(color, &brown);
+	} else if (wy <= 11) {
+		vec3f_mix(color, &brown, &gray, 1 - (wy - 9.0f) / 2.0f);
+	} else if (wy <= 13) {
+		vec3f_set3(color, &gray);
+	} else if(wy <= 15) {
+		vec3f_mix(color, &gray, &white, 1 - (wy - 13.0f) / 2.0f);
 	} else {
-		vec3f_set(color, 0, 1, 0);
+		vec3f_set3(color, &white);
 	}
 
 	vec3f_mult(color, color, 1 - gradient);
@@ -64,9 +79,11 @@ static void terrainGenerateColorAt(t_world * world, t_vec3f * color, float wx, f
 
 static float terrainGenerateHeightAt(t_world * world, float wx, float wz) {
 	float height = 0;
-	height += noise2(world->octaves[0], wx * 0.001f, wz * 0.001f) * 16.4f;
-	height += noise2(world->octaves[0], wx * 0.01f, wz * 0.01f) * 2.4f;
-	height += noise2(world->octaves[1], wx * 16.0f, wz * 16.0f) * 0.01f;
+	height += noise2(world->octaves[0], wx * 0.001f, wz * 0.001f) * 20.0f;
+	height += noise2(world->octaves[1], wx * 0.01f, wz * 0.01f) * 1.0f;
+	height += noise2(world->octaves[2], wx * 0.05f, wz * 0.05f) * 0.08f;
+	height += noise2(world->octaves[3], wx * 16.0f, wz * 16.0f) * 0.01f;
+	height = clamp(height, -10, 512);
 	return (height);
 }
 

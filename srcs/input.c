@@ -102,7 +102,7 @@ static void inputUpdateDebug(t_glh_context * context, t_world * world, t_rendere
 
 static void inputUpdateCamera(t_camera * camera) {
 
-	static float movespeed = 5.5f;
+	static float movespeed = 3.5f;
 	static float rotspeed = 1.0f;
 
 	t_glh_window * win = glhGetWindow();
