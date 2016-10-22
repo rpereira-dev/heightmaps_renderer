@@ -196,11 +196,11 @@ static void rendererUpdateLists(t_world * world, t_renderer * renderer, t_camera
 			diff.x *= normalizer;
 			diff.z *= normalizer;
 			if (distance < TERRAIN_RENDER_DISTANCE) {
-			//float dot = vec3f_dot_product(&(camera->vview), &diff);
-			//float angle = acos_f(dot);
-				//if (distance <= 2 || angle < camera->fov + 0.01f) {
+				float dot = vec3f_dot_product(&(camera->vview), &diff);
+				float angle = acos_f(dot);
+				if (distance <= 2 || angle < camera->fov + 0.01f) {
 					array_list_add(renderer->render_list, &terrain);
-				//}
+				}
 			}
 		}
 	}
@@ -238,8 +238,8 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	glhProgramLoadUniformMatrix4f(u_mvp_matrix, (float*)&(camera->mviewproj));
 
 	//weather
-	glhProgramLoadUniformFloat(u_fog_gradient, 3.5f);
-	glhProgramLoadUniformFloat(u_fog_density, 0.007f);
+	glhProgramLoadUniformFloat(u_fog_gradient, 10.0f);
+	glhProgramLoadUniformFloat(u_fog_density, 0.00065f);
 	glhProgramLoadUniformVec3f(u_sky_color, 0.46f, 0.70f, 0.99f);
 
 	//load state

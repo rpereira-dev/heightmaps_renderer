@@ -15,12 +15,22 @@ LIBTHREAD = $(LIBFOLDER)/tinycthread
 LIBTHREAD_STATIC = $(LIBFOLDER)/tinycthread/libtinycthread.a
 
 LIB_STATIC = $(LIBC_STATIC) $(LIBM_STATIC) $(LIBGL_STATIC) $(LIBTHREAD_STATIC)
-LIB_OTHER = -lgdi32 -lopengl32 -luser32 -lkernel32 -lglew32
 
 SRCS = $(wildcard ./srcs/*.c)
 C_OBJ = $(SRCS:.c=.o)
 FLAGS = -Wall -Werror -Wextra
 INC = -I ./includes -I $(LIBC)/includes -I $(LIBM)/includes -I $(LIBGL)/include -I $(LIBTHREAD)/source
+
+
+UNAME_S = $(shell uname -s)
+
+ifeq ($(UNAME_S),Darwin)
+	LIB_OTHER = -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
+endif
+
+ifeq ($(OS),Windows_NT)
+	LIB_OTHER = -lgdi32 -lopengl32 -luser32 -lkernel32 -lglew32
+endif
 
 all: $(LIB_STATIC) $(NAME) $(HEADERS)
 
