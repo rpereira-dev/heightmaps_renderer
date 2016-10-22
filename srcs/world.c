@@ -4,7 +4,7 @@ void worldInit(t_world * world) {
 	glhCheckError("pre worldInit()");
 
 	//create the terrain hash map
-	world->terrains = hmap_new(4096, (t_hf)vec2i_hash, (t_cmpf)vec2i_nequals, (t_f)NULL, (t_f)NULL);
+	world->terrains = hmap_new(TERRAIN_KEEP_LOADED_DISTANCE * 4, (t_hf)vec2i_hash, (t_cmpf)vec2i_nequals, (t_f)NULL, (t_f)NULL);
 	if (world->terrains == NULL) {
 		fprintf(stderr, "world.c : l.10 : worldInit() : not enough memory\n");
 		return ;
@@ -61,6 +61,7 @@ t_terrain * worldGetTerrain(t_world * world, int gridX, int gridY) {
 }
 
 static void worldLoadNewTerrains(t_world * world, t_camera * camera) {
+
 	int indexx = camera->terrain_index.x - TERRAIN_LOADED_DISTANCE;
 	int indexy = camera->terrain_index.y - TERRAIN_LOADED_DISTANCE;
 	int maxx = camera->terrain_index.x + TERRAIN_LOADED_DISTANCE;
@@ -69,7 +70,7 @@ static void worldLoadNewTerrains(t_world * world, t_camera * camera) {
 	for (gridX = indexx ; gridX  < maxx; gridX++) {
 		for (gridY = indexy ; gridY < maxy; gridY++) {
 			if (worldGetTerrain(world, gridX, gridY) == NULL) {
-//				printf("%ld vs %d\n", world->terrains->size, TERRAIN_KEEP_LOADED_DISTANCE * TERRAIN_KEEP_LOADED_DISTANCE * 2 * 2);
+				//printf("%ld vs %d\n", world->terrains->size, MAX_NUMBER_OF_TERRAIN_LOADED);
 				t_terrain * terrain = terrainNew(world, gridX, gridY);
 				hmap_insert(world->terrains, terrain, &(terrain->index));
 			}

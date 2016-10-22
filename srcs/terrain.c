@@ -150,8 +150,3 @@ t_terrain * terrainNew(t_world * world, int gridX, int gridY) {
 
 	return (terrain);
 }
-
-/** delete a terrain from memory (heap + gpu)*/
-void terrainDelete(t_terrain * terrain) {
-	free(terrain);
-}

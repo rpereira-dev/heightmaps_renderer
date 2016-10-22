@@ -74,6 +74,10 @@ t_glh_window * glhGetWindow() {
 	return (glhGetContext()->window);
 }
 
+#ifndef GL_STACK_UNDERFLOW
+# define GL_STACK_UNDERFLOW (0)
+#endif
+
 char * glhGetErrorString(int err) {
 	static char * str[] = { "GL_INVALID_ENUM", "GL_INVALID_VALUE", "GL_INVALID_OPERATION", "GL_STACK_OVERFLOW",
 			"GL_STACK_UNDERFLOW", "GL_OUT_OF_MEMORY" };
@@ -108,6 +112,13 @@ t_glh_window * glhWindowCreate() {
 	static char * DEFAULT_WINDOW_TITLE = "Default Title";
 	static int DEFAULT_WINDOW_WIDTH = 1100;
 	static int DEFAULT_WINDOW_HEIGHT = 1100 / 1.6f;
+
+	#ifdef __APPLE__
+		glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
+  		glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
+  		glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  		glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	#endif
 
 	void * pointer = glfwCreateWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_TITLE, NULL, NULL);
 	if (pointer == NULL) {

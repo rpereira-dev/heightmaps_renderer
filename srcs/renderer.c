@@ -118,13 +118,12 @@ void rendererInit(t_renderer * renderer) {
 static void rendererDeinitTerrain(t_renderer * renderer, t_terrain * terrain) {
 	(void)renderer;
 
-	if (!terrain->initialized) {
-		return ;
+	if (terrain->initialized) {
+		terrain->initialized = 0;
+		glhVAODelete(terrain->vao);
+		glhVBODelete(terrain->vbo);
 	}
-	terrain->initialized = 0;
-
-	glhVAODelete(terrain->vao);
-	glhVBODelete(terrain->vbo);
+	
 	if (terrain->vertices != NULL) {
 		free(terrain->vertices);
 		terrain->vertices = NULL;
