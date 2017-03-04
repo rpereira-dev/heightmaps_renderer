@@ -80,6 +80,7 @@ void glhWindowDestroy(t_glh_window * window);
 void glhWindowSetTitle(t_glh_window * window, char * title);
 void glhWindowSetSize(t_glh_window * window, int width, int height);
 void glhWindowUpdate(t_glh_window * window);
+void glhViewPort(int x, int y, int width, int height);
 
 /** swap buffers */
 void glhSwapBuffer(t_glh_window * window);

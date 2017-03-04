@@ -145,6 +145,10 @@ void glhWindowClose(t_glh_window * window) {
 	glfwSetWindowShouldClose(window->pointer, 1);
 }
 
+void glhViewPort(int x, int y, int width, int height) {
+	glViewport(x, y, width, height);
+}
+
 /** destroy a window */
 void glhWindowDestroy(t_glh_window * window) {
 	glfwDestroyWindow(window->pointer);
@@ -163,6 +167,7 @@ void glhWindowUpdate(t_glh_window * window) {
 	window->prev_mouseX = window->mouseX;
 	window->prev_mouseY = window->mouseY;
 	glfwGetCursorPos(window->pointer, &(window->mouseX), &(window->mouseY));
+	glfwGetWindowSize(window->pointer, &(window->width), &(window->height));
 	glfwPollEvents();
 }
 

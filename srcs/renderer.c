@@ -228,6 +228,9 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	(void)context;
 	(void)world;
 
+	//viewport
+	glhViewPort(0, 0, context->window->width, context->window->height);
+
     //clear color buffer
     glhClearColor(0.46f, 0.70f, 0.99f, 1.0f);
     glhClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

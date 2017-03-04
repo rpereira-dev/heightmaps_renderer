@@ -56,33 +56,54 @@ static float biomPlainGenHeight(t_world * world, t_biom * biom, float wx, float 
 	return (height);
 }
 
-static float biomBMPGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
+static float biomHeightmapGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
 	(void)biom;
 	float f = world->max_height;
-	t_heightmap * hmap = world->bmpfile;
-	int px = (int)(wx / (TERRAIN_SIZE * TERRAIN_DETAIL));
-	int py = (int)(wy / (TERRAIN_SIZE * TERRAIN_DETAIL));
-	px = clamp(px, 0, hmap->w);
-	py = clamp(py, 0, hmap->h);
-	float height = heightmapGetHeight(hmap, px, py);
+	t_heightmap * hmap = world->heightmap;
+	int px = (int)(wx / TERRAIN_UNIT);
+	int py = (int)(wz / TERRAIN_UNIT);
+	px = clamp(px, 0, world->heightmap->w - 1);
+	py = clamp(py, 0, world->heightmap->h - 1);
+
+	int rgb = heightmapGetHeight(hmap, px, py);
+	float height = rgb / (255.0f * 3.0f) * f;
 	height = clamp(height, -f, f);
 	return (height);
 }
 
+static int biomHeightmapCanGenerate(t_world * world, t_biom * biom, float wx, float wz) {
+	(void)biom;
+	int px = (int)(wx / TERRAIN_UNIT);
+	int py = (int)(wz / TERRAIN_UNIT);
+	return (px >= 0 && py >= 0 && px < world->heightmap->w && py < world->heightmap->h);
+}
+
+static int biomCanGenerate(t_world * world, t_biom * biom, float wx, float wz) {
+	(void)world;
+	(void)biom;
+	(void)wx;
+	(void)wz;
+	return (1);
+}
+
 static void biomRegister(t_world * world,
 							float (*heightGen)(t_world *, struct s_biom *, float, float),
-							void (*colorGen)(t_world *, struct s_biom *, t_vec3f *, float, float, float)) {
+							void (*colorGen)(t_world *, struct s_biom *, t_vec3f *, float, float, float),
+							int (*canGen)(t_world *, struct s_biom *, float, float)) {
 	t_biom biom;
 	biom.heightGen = heightGen;
 	biom.colorGen = colorGen;
+	biom.canGenerateAt = canGen;
 	array_list_add(world->bioms, &biom);
 }
 
 void biomsInit(t_world * world) {
-	if (world->bmpfile == NULL) {
-		biomRegister(world, biomPlainGenHeight, biomPlainGenColor);
+	if (world->heightmap == NULL) {
+		printf("No heightmaps set, generating terrain procedurally\n");
+		biomRegister(world, biomPlainGenHeight, biomPlainGenColor, biomCanGenerate);
 	} else {
-		biomRegister(world, biomBMPGenHeight, biomPlainGenColor);
+		printf("Heightmap in use\n");
+		biomRegister(world, biomHeightmapGenHeight, biomPlainGenColor, biomHeightmapCanGenerate);
 	}
 }
 

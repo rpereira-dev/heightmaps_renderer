@@ -18,8 +18,8 @@ static void terrainGenerateVertices(t_world * world, float vertices[], int gridX
 	for (x = 0 ; x < TERRAIN_DETAIL ; x++) {
 		for (y = 0 ; y < TERRAIN_DETAIL; y++) {
 
-			float wx = gridX * TERRAIN_SIZE + x * TERRAIN_SIZE / (TERRAIN_DETAIL - 1);
-			float wz = gridY * TERRAIN_SIZE + y * TERRAIN_SIZE / (TERRAIN_DETAIL - 1);
+			float wx = (gridX * (TERRAIN_DETAIL - 1) + x) * TERRAIN_UNIT;
+			float wz = (gridY * (TERRAIN_DETAIL - 1) + y) * TERRAIN_UNIT;
 			t_biom * biom = worldGetBiomAt(world, wx, wz);
 			float wy = biom->heightGen(world, biom, wx, wz);
 			biom->colorGen(world, biom, &color, wx, wy, wz);
@@ -58,7 +58,6 @@ void terrainGenerate(t_world * world, t_terrain * terrain) {
 
 /** allocate a new terrain on heap + gpu */
 t_terrain * terrainNew(t_world * world, int gridX, int gridY) {
-
 	//allocate the terrain
 	t_terrain * terrain = (t_terrain*)malloc(sizeof(t_terrain));
 	if (terrain == NULL) {

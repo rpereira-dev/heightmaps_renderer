@@ -1,10 +1,10 @@
 #include "renderer.h"
 
-static void worldLoadBmpFile(t_world * world, char * file) {
+static void worldLoadHeightmap(t_world * world, char * file) {
 	if (file == NULL) {
-		world->bmpfile = NULL;
+		world->heightmap = NULL;
 	} else {
-		world->bmpfile = bmpFileNew(file);
+		world->heightmap = heightmapNew(file);
 	}
 }
 
@@ -13,8 +13,7 @@ void worldInit(t_world * world, char * bmpfile, int max_height) {
 
 	world->time = 0;
 	world->max_height = max_height;
-	worldLoadBmpFile(world, bmpfile);
-
+	worldLoadHeightmap(world, bmpfile);
 	world->bioms = array_list_new(16, sizeof(t_biom));
 	biomsInit(world);
 
@@ -24,6 +23,7 @@ void worldInit(t_world * world, char * bmpfile, int max_height) {
 		fprintf(stderr, "world.c : l.10 : worldInit() : not enough memory\n");
 		return ;
 	}
+	puts("y");
 
 	//noise creation
 	long long unsigned int seed = time(NULL);
@@ -39,6 +39,7 @@ void worldInit(t_world * world, char * bmpfile, int max_height) {
 	terrainGenerate(world, terrain);
 	worldSpawnTerrain(world, terrain);
 */
+	puts("z");
 
 	glhCheckError("post worldInit()");
 }
@@ -94,9 +95,20 @@ static void worldLoadNewTerrains(t_world * world, t_camera * camera) {
 	for (gridX = indexx ; gridX  < maxx; gridX++) {
 		for (gridY = indexy ; gridY < maxy; gridY++) {
 			if (worldGetTerrain(world, gridX, gridY) == NULL) {
-				//printf("%ld vs %d\n", world->terrains->size, MAX_NUMBER_OF_TERRAIN_LOADED);
+
+				//can a terrain be generated here?
+				float wx = gridX * TERRAIN_SIZE;
+				float wz = gridY * TERRAIN_SIZE;
+				t_biom * biom = worldGetBiomAt(world, wx, wz);
+				if (!biom->canGenerateAt(world, biom, wx, wz)) {
+					continue ;
+				}
+
+				//if so, generate it
 				t_terrain * terrain = terrainNew(world, gridX, gridY);
-				hmap_insert(world->terrains, terrain, &(terrain->index));
+				if (terrain != NULL) {
+					hmap_insert(world->terrains, terrain, &(terrain->index));
+				}
 			}
 		}
 	}

@@ -76,6 +76,7 @@ typedef struct 	s_world {
 typedef struct 	s_biom {
 	float (*heightGen)(t_world *, struct s_biom *, float, float);
 	void (*colorGen)(t_world *, struct s_biom *, t_vec3f *, float, float, float);
+	int (*canGenerateAt)(t_world *, struct s_biom *, float, float);
 }				t_biom;
 
 /** the renderer part of the program */
@@ -130,7 +131,7 @@ void cameraUpdate(t_glh_context * context, t_world * world, t_renderer * rendere
 //heightmaps (bmp file)
 t_heightmap *	heightmapNew(char const * path);
 void 			heightmapDelete(t_heightmap * map);
-float 			heightMapGetHeight(t_heightmap * map, int x, int y);
+int 			heightmapGetHeight(t_heightmap * map, int x, int y);
 
 //inputs
 void inputInit(t_glh_context * context);

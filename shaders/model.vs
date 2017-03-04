@@ -38,8 +38,8 @@ void main(void) {
     float visibility = 0.0f;
   	if ((state & STATE_APPLY_FOG) != STATE_APPLY_FOG) {
       //visibility^8
-  		visibility = length(gl_Position.xyz) / float(RENDER_DISTANCE);
-      visibility += sin(time * 0.5f) * 0.025f + sin(42.0f + time * 0.5f) * 0.01f + sin(42.5f + time * 0.4f) * 0.01f;
+  		visibility = length(gl_Position.xz) / float(RENDER_DISTANCE);
+      visibility += sin(time * 0.2f) * 0.025f + sin(42.0f + time * 0.2f) * 0.01f + sin(42.5f + time * 0.2f) * 0.01f;
 
       visibility = visibility * visibility;
       visibility = visibility * visibility;
@@ -51,9 +51,9 @@ void main(void) {
 
   	//phong ligthing model
   	if ((state & STATE_APPLY_PHONG_LIGHTNING) != STATE_APPLY_PHONG_LIGHTNING) {
-  		vec3 sun = normalize(vec3(1.0, 1.0, 1.0));
+  		vec3 sun = normalize(vec3(1.0, 0.8, 1.0));
 	  	float n = dot(normal, sun);
-	  	float intensity = max(n, 0.4);
+	  	float intensity = max(n, 0.3);
 	  	diffuse *= intensity;
 	}
 
