@@ -4,7 +4,7 @@ void printUsage(char * binary, FILE * dst) {
 	fprintf(dst, "usage: ./%s [FLAGS]\n", binary);
 	fprintf(dst, "flags available are:\n");
 	fprintf(dst, "\t-r {SEED} for random/infinite terrain generation\n");
-	fprintf(dst, "\t-t [FILE] for a bmp terrain heightmap loading\n");
+	fprintf(dst, "\t-f [FILE] for a bmp terrain heightmap loading\n");
 	fprintf(dst, "\t-h [MAX_HEIGHT] to define maximum height of meshes\n");
 	fprintf(dst, "examples:\n");
 	fprintf(dst, "\t./%s -r 42 -h 256\n", binary);
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     int optind;
     char mode = 'r';
     long seed = time(NULL);
-    int maxheight = 64;
+    int maxheight = TERRAIN_SIZE;
     char * bmpfile = NULL;
     for (optind = 1; optind < argc; optind++) {
 
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
     	switch (argv[optind][1]) {
     		case 'r': if (optind + 1 < argc) { seed = atoi(argv[++optind]); } break;
-    		case 't': if (optind + 1 >= argc) { printUsage(binary, stderr); return (EXIT_FAILURE); } else { bmpfile = strdup(argv[++optind]); } break;
+    		case 'f': if (optind + 1 >= argc) { printUsage(binary, stderr); return (EXIT_FAILURE); } else { bmpfile = strdup(argv[++optind]); } break;
     		case 'h': if (optind + 1 >= argc) { printUsage(binary, stderr); return (EXIT_FAILURE); } else { maxheight = atoi(argv[++optind]); } break;
     		default: printUsage(binary, stderr); return (EXIT_FAILURE);
         }   
@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 	inputInit(context);
 
 	printf("Initializing world...\n");
-	worldInit(world);
+	worldInit(world, bmpfile, maxheight);
 
 	printf("Creating calculator thread...\n");
   	thrd_create(thrd, threadLoop, &env);
@@ -141,7 +141,7 @@ int main(int argc, char **argv) {
     	//render
     	rendererRender(context, world, renderer, camera);
     	
-    	glhCheckError("post rendererUpdate()");
+    	//glhCheckError("post rendererUpdate()");
 
     	long t2;
     	MICROSEC(t2);

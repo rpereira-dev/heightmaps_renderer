@@ -35,8 +35,8 @@ endif
 all: $(LIB_STATIC) $(NAME) $(HEADERS)
 
 $(LIB_STATIC):
-	git submodule init
-	git submodule update --remote --merge
+	- git submodule init
+	- git submodule update --remote --merge
 	make -C $(LIBC)
 	make -C $(LIBM)
 	- cd $(LIBGL) ; mkdir build ; cd build ; cmake -DCMAKE_TOOLCHAIN_FILE=CMake/x86_64-w64-mingw32.cmake ../ ; make

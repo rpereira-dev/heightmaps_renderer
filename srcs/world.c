@@ -1,7 +1,22 @@
 #include "renderer.h"
 
-void worldInit(t_world * world) {
+static void worldLoadBmpFile(t_world * world, char * file) {
+	if (file == NULL) {
+		world->bmpfile = NULL;
+	} else {
+		world->bmpfile = bmpFileNew(file);
+	}
+}
+
+void worldInit(t_world * world, char * bmpfile, int max_height) {
 	glhCheckError("pre worldInit()");
+
+	world->time = 0;
+	world->max_height = max_height;
+	worldLoadBmpFile(world, bmpfile);
+
+	world->bioms = array_list_new(16, sizeof(t_biom));
+	biomsInit(world);
 
 	//create the terrain hash map
 	world->terrains = hmap_new(TERRAIN_KEEP_LOADED_DISTANCE * 4, (t_hf)vec2i_hash, (t_cmpf)vec2i_nequals, (t_f)NULL, (t_f)NULL);
@@ -29,6 +44,8 @@ void worldInit(t_world * world) {
 }
 
 void worldDelete(t_world * world) {
+	array_list_delete(world->bioms);
+	free(world->bioms);
 	hmap_delete(world->terrains);
 	free(world->terrains);
 
@@ -36,6 +53,13 @@ void worldDelete(t_world * world) {
 	for (i = 0 ; i < WORLD_OCTAVES ; i++) {
 		noiseDelete(world->octaves[i]);
 	}
+	biomsDelete(world);
+}
+
+t_biom * worldGetBiomAt(t_world * world, float wx, float wz) {
+	(void)wx;
+	(void)wz;
+	return (array_list_get(world->bioms, 0));
 }
 
 void worldGetGridIndex(t_world * world, float worldX, float worldZ, int * gridX, int * gridY) {
@@ -86,4 +110,5 @@ void worldUpdate(t_glh_context * context, t_world * world, t_renderer * renderer
 
 	//load new terrains
 	worldLoadNewTerrains(world, camera);
+	world->time++;
 }

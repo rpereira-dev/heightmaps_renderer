@@ -6,6 +6,7 @@ GLuint u_fog_density;
 GLuint u_fog_gradient;
 GLuint u_sky_color;
 GLuint u_state;
+GLuint u_time;
 
 static void rendererBindAttributes(t_glh_program * program) {
 	glhProgramBindAttribute(program, 0, "pos");
@@ -21,6 +22,7 @@ static void rendererLinkUniforms(t_glh_program * program) {
 	u_fog_gradient = glhProgramGetUniform(program, "fog_gradient");
 	u_sky_color = glhProgramGetUniform(program, "sky_color");
 	u_state = glhProgramGetUniform(program, "state");
+	u_time = glhProgramGetUniform(program, "time");
 }
 
 static void rendererGenerateBufferIndices(t_renderer * renderer) {
@@ -195,11 +197,11 @@ static void rendererUpdateLists(t_world * world, t_renderer * renderer, t_camera
 			diff.x *= normalizer;
 			diff.z *= normalizer;
 			if (distance < TERRAIN_RENDER_DISTANCE) {
-				float dot = vec3f_dot_product(&(camera->vview), &diff);
-				float angle = acos_f(dot);
-				if (distance <= 2 || angle < camera->fov + 0.01f) {
+				//float dot = vec3f_dot_product(&(camera->vview), &diff);
+				//float angle = acos_f(dot);
+				//if (distance <= 2 || angle < camera->fov + 0.01f) {
 					array_list_add(renderer->render_list, &terrain);
-				}
+			//	}
 			}
 		}
 	}
@@ -237,12 +239,14 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	glhProgramLoadUniformMatrix4f(u_mvp_matrix, (float*)&(camera->mviewproj));
 
 	//weather
-	glhProgramLoadUniformFloat(u_fog_gradient, 10.0f);
-	glhProgramLoadUniformFloat(u_fog_density, 0.00065f);
+	float ratio = 1.0f / (float)(TERRAIN_RENDER_DISTANCE * TERRAIN_SIZE);
+	glhProgramLoadUniformFloat(u_fog_gradient, ratio * 4096.0f);
+	glhProgramLoadUniformFloat(u_fog_density, ratio * 1.5f);
 	glhProgramLoadUniformVec3f(u_sky_color, 0.46f, 0.70f, 0.99f);
 
 	//load state
 	glhProgramLoadUniformInt(u_state, renderer->state);
+	glhProgramLoadUniformInt(u_time, world->time);
 
 	//debug
 	if (glfwGetKey(context->window->pointer, GLFW_KEY_F) == GLFW_PRESS) {
@@ -275,7 +279,7 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 		}
 
 		//generate the transformation matrix
-		static t_mat4f mat;
+		t_mat4f mat;
 		mat4f_identity(&mat);
 		mat4f_translate(&mat, &mat, terrain->index.x * TERRAIN_SIZE, 0, terrain->index.y * TERRAIN_SIZE);
 		mat4f_scale(&mat, &mat, TERRAIN_SIZE);

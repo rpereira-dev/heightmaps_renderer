@@ -1,111 +1,36 @@
 #include "renderer.h"
 
-static float terrainGetHeight(float vertices[], int x, int y) {
-	return (vertices[(x * TERRAIN_DETAIL + y) * TERRAIN_FLOATS_PER_VERTEX]);
-}
+static void terrainCalculateNormal(t_world * world, t_biom * biom, t_vec3f * normal, float wx, float wy) {
 
-static void terrainCalculateNormal(float vertices[], t_vec3f * normal, int x, int z) {
-
-	float xy_height = terrainGetHeight(vertices, x, z);
-	float left	= (x - 1 >= 0) 				? terrainGetHeight(vertices, x - 1, z) : xy_height + xy_height - terrainGetHeight(vertices, x + 1, z);
-	float right	= (x + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x + 1, z) : xy_height + xy_height - terrainGetHeight(vertices, x - 1, z);
-	float down	= (z - 1 >= 0) 				? terrainGetHeight(vertices, x, z - 1) : xy_height + xy_height - terrainGetHeight(vertices, x, z + 1);
-	float up 	= (z + 1 < TERRAIN_DETAIL) 	? terrainGetHeight(vertices, x, z + 1) : xy_height + xy_height - terrainGetHeight(vertices, x, z - 1);
+	float left	= biom->heightGen(world, biom, wx - TERRAIN_UNIT, wy);
+	float right	= biom->heightGen(world, biom, wx + TERRAIN_UNIT, wy);
+	float down	= biom->heightGen(world, biom, wx, wy - TERRAIN_UNIT);
+	float up	= biom->heightGen(world, biom, wx, wy + TERRAIN_UNIT);
 
 	vec3f_set(normal, left - right, 2.0f, down - up);
 	vec3f_normalize(normal, normal);
 }
 
-static void terrainGenerateNormals(float vertices[]) {
-	t_vec3f normal;
-
+static void terrainGenerateVertices(t_world * world, float vertices[], int gridX, int gridY) {
+	t_vec3f color, normal;
 	int x, y;
 	int i = 0;
 	for (x = 0 ; x < TERRAIN_DETAIL ; x++) {
 		for (y = 0 ; y < TERRAIN_DETAIL; y++) {
 
-			//calculate the normal
-			terrainCalculateNormal(vertices, &normal, x, y);
-			++i; //skip height
-			vertices[i++] = normal.x;
-			vertices[i++] = normal.y;
-			vertices[i++] = normal.z;
-			++i; //skip color r
-			++i; //skip color g
-			++i; //skip color b
-		}
-	}
-}
-
-float clamp(float val, float min, float max) {
-	if (val > max) {
-		return (max);
-	}
-    return (val < min ? min : val);
-}
-
-static void terrainGenerateColorAt(t_world * world, t_vec3f * color, float wx, float wy, float wz) {
-
-	static t_vec3f blue		= {{0.1f}, {0.2f}, {0.9f}};
-	static t_vec3f green 	= {{0.2f}, {0.9f}, {0.14f}};
-	static t_vec3f brown	= {{0.4f}, {0.35f}, {0.25f}};
-	static t_vec3f gray		= {{0.6f}, {0.6f}, {0.6f}};
-	static t_vec3f white	= {{0.95f}, {0.95f}, {0.95f}};
-
-	float gradient = noise3(world->octaves[1], wx * 16, wy * 16, wz * 16) * 0.05f;
-
-	if (wy <= -10) {
-		vec3f_set3(color, &blue);
-	} else if (wy <= -6.0f) {
-		vec3f_mix(color, &blue, &green, 1 - (wy + 10.0f) / 4.0f);
-	} else if (wy <= 3) {
-		vec3f_set3(color, &green);
-	} else if (wy <= 7) {
-		vec3f_mix(color, &green, &brown, 1 - (wy - 3.0f) / 4.0f);
-	} else if (wy <= 9) {
-		vec3f_set3(color, &brown);
-	} else if (wy <= 11) {
-		vec3f_mix(color, &brown, &gray, 1 - (wy - 9.0f) / 2.0f);
-	} else if (wy <= 13) {
-		vec3f_set3(color, &gray);
-	} else if(wy <= 15) {
-		vec3f_mix(color, &gray, &white, 1 - (wy - 13.0f) / 2.0f);
-	} else {
-		vec3f_set3(color, &white);
-	}
-
-	vec3f_mult(color, color, 1 - gradient);
-}
-
-static float terrainGenerateHeightAt(t_world * world, float wx, float wz) {
-	float height = 0;
-	height += noise2(world->octaves[0], wx * 0.001f, wz * 0.001f) * 20.0f;
-	height += noise2(world->octaves[1], wx * 0.01f, wz * 0.01f) * 1.0f;
-	height += noise2(world->octaves[2], wx * 0.05f, wz * 0.05f) * 0.08f;
-	height += noise2(world->octaves[3], wx * 16.0f, wz * 16.0f) * 0.01f;
-	height = clamp(height, -10, 512);
-	return (height);
-}
-
-static void terrainGenerateVertices(t_world * world, float vertices[], int gridX, int gridY,
-										float (*heightGen)(t_world *, float, float),
-										void (*colorGen)(t_world *, t_vec3f *, float, float, float)) {
-	t_vec3f color;
-	int x, y;
-	int i = 0;
-	for (x = 0 ; x < TERRAIN_DETAIL ; x++) {
-		for (y = 0 ; y < TERRAIN_DETAIL; y++) {
-
-			float wx = gridX * (TERRAIN_DETAIL - 1) + x;
-			float wz = gridY * (TERRAIN_DETAIL - 1) + y;
-			float wy = heightGen(world, wx, wz);
-			colorGen(world, &color, wx, wy, wz);
+			float wx = gridX * TERRAIN_SIZE + x * TERRAIN_SIZE / (TERRAIN_DETAIL - 1);
+			float wz = gridY * TERRAIN_SIZE + y * TERRAIN_SIZE / (TERRAIN_DETAIL - 1);
+			t_biom * biom = worldGetBiomAt(world, wx, wz);
+			float wy = biom->heightGen(world, biom, wx, wz);
+			biom->colorGen(world, biom, &color, wx, wy, wz);
+			terrainCalculateNormal(world, biom, &normal, wx, wz);
 
 			vertices[i++] = wy;
 
-			++i; //skip normalx
-			++i; //skip normaly
-			++i; //skip normalz
+			//generate normal
+			vertices[i++] = normal.x;
+			vertices[i++] = normal.y;
+			vertices[i++] = normal.z;
 
 			//generate color
 			vertices[i++] = color.r;
@@ -128,8 +53,7 @@ void terrainGenerate(t_world * world, t_terrain * terrain) {
 	int gridX = terrain->index.x;
 	int gridY = terrain->index.y;
 	terrain->vertices = (float *) malloc(sizeof(float) * TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_FLOATS_PER_VERTEX);
-	terrainGenerateVertices(world, terrain->vertices, gridX, gridY, terrainGenerateHeightAt, terrainGenerateColorAt);
-	terrainGenerateNormals(terrain->vertices);
+	terrainGenerateVertices(world, terrain->vertices, gridX, gridY);
 }
 
 /** allocate a new terrain on heap + gpu */
