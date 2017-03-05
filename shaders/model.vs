@@ -27,7 +27,7 @@ uniform int time;
 # define STATE_APPLY_PHONG_LIGHTNING (2)
 
 # define TERRAIN_SIZE (16)
-# define TERRAIN_RENDER_DISTANCE (32)
+# define TERRAIN_RENDER_DISTANCE (48)
 # define RENDER_DISTANCE (TERRAIN_RENDER_DISTANCE * TERRAIN_SIZE)
 
 void main(void) {
@@ -39,7 +39,7 @@ void main(void) {
   	if ((state & STATE_APPLY_FOG) != STATE_APPLY_FOG) {
       //visibility^8
   		visibility = length(gl_Position.xz) / float(RENDER_DISTANCE);
-      visibility += sin(time * 0.2f) * 0.025f + sin(42.0f + time * 0.2f) * 0.01f + sin(42.5f + time * 0.2f) * 0.01f;
+      visibility += sin(time * 0.1f) * 0.025f + sin(42.0f + time * 0.1f) * 0.01f + sin(42.5f + time * 0.1f) * 0.01f;
 
       visibility = visibility * visibility;
       visibility = visibility * visibility;

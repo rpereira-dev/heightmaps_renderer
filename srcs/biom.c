@@ -35,8 +35,8 @@ static void biomPlainGenColor(t_world * world, t_biom * biom, t_vec3f * color, f
 		vec3f_mix(color, &brown, &gray, 1 - (r - 0.7f) / 0.1f);
 	} else if (r <= 0.85f) {
 		vec3f_set3(color, &gray);
-	} else if(r <= 0.95f) {
-		vec3f_mix(color, &gray, &white, 1 - (r - 0.85f) / 0.1f);
+	} else if(r <= 0.90f) {
+		vec3f_mix(color, &gray, &white, 1 - (r - 0.85f) / 0.05f);
 	} else {
 		vec3f_set3(color, &white);
 	}
@@ -66,7 +66,7 @@ static float biomHeightmapGenHeight(t_world * world, t_biom * biom, float wx, fl
 	py = clamp(py, 0, world->heightmap->h - 1);
 
 	int rgb = heightmapGetHeight(hmap, px, py);
-	float height = rgb / (255.0f * 3.0f) * f;
+	float height = (rgb / (255.0f * 3.0f) * 2 - 1) * f;
 	height = clamp(height, -f, f);
 	return (height);
 }

@@ -36,7 +36,7 @@ typedef struct	s_camera {
 # define TERRAIN_SIZE (16)
 # define TERRAIN_UNIT (TERRAIN_SIZE / TERRAIN_DETAIL)
 // number of terrain to render in term of distance
-# define TERRAIN_RENDER_DISTANCE (32)
+# define TERRAIN_RENDER_DISTANCE (48)
 // distance where terrain are kept loaded in memory
 # define TERRAIN_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE + 4)
 // distance where terrain are kept loaded in memory

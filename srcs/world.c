@@ -23,7 +23,6 @@ void worldInit(t_world * world, char * bmpfile, int max_height) {
 		fprintf(stderr, "world.c : l.10 : worldInit() : not enough memory\n");
 		return ;
 	}
-	puts("y");
 
 	//noise creation
 	long long unsigned int seed = time(NULL);
@@ -39,12 +38,12 @@ void worldInit(t_world * world, char * bmpfile, int max_height) {
 	terrainGenerate(world, terrain);
 	worldSpawnTerrain(world, terrain);
 */
-	puts("z");
 
 	glhCheckError("post worldInit()");
 }
 
 void worldDelete(t_world * world) {
+	heightmapDelete(world->heightmap);
 	array_list_delete(world->bioms);
 	free(world->bioms);
 	hmap_delete(world->terrains);

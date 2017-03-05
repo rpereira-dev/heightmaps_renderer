@@ -45,9 +45,9 @@ int heightmapGetHeight(t_heightmap * map, int x, int y) {
 	unsigned char b = rgb[idx + 0];
 	unsigned char g = rgb[idx + 1];
 	unsigned char r = rgb[idx + 2];
-	return ((r + g + b) / 3);
+	return (r + g + b);
 }
 
-void heightMapDelete(t_heightmap * map) {
+void heightmapDelete(t_heightmap * map) {
 	free(map);
 }

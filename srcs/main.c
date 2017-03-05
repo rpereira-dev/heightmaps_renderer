@@ -121,6 +121,8 @@ int main(int argc, char **argv) {
 
 	env.is_running = 1;
 
+	glfwSwapInterval(1);
+
     while (!glhWindowShouldClose(context->window) && env.is_running) {
 
     	long t1;
