@@ -66,8 +66,8 @@ static void rendererGenerateBufferVertices(t_renderer * renderer) {
 		for (z = 0 ; z < TERRAIN_DETAIL ; z++) {
 			vertices[i++] = x * unit;
 			vertices[i++] = z * unit;
-			vertices[i++] = z / (float)(TERRAIN_DETAIL - 1) / (float)TX_MAX;
-			vertices[i++] = x / (float)(TERRAIN_DETAIL - 1);
+			vertices[i++] = x % 2 == 0 ? 0.0f : 1.0f;
+			vertices[i++] = z % 2 == 0 ? 0.0f : 1.0f;
 		}
 	}
 
@@ -112,7 +112,13 @@ void rendererInit(t_renderer * renderer) {
 	renderer->texture.image = imageNew("./res/textures.bmp");
 	unsigned char * pixels = (unsigned char*)(renderer->texture.image + 1);
 	glBindTexture(GL_TEXTURE_2D, renderer->texture.txID);
+	printf("txID: %u w : %d h : %d\n", renderer->texture.txID, renderer->texture.image->w, renderer->texture.image->h);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, renderer->texture.image->w, renderer->texture.image->h, 0, GL_BGR, GL_UNSIGNED_BYTE, pixels);
+
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.6f);
 
 	//enable depth test
 	glEnable(GL_DEPTH_TEST);

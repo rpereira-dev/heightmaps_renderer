@@ -1,8 +1,9 @@
 #version 330 core
 
-in float visibility;
-in vec3  pass_normal;
-in vec2  pass_uv;
+in float 	visibility;
+in vec3  	pass_normal;
+in vec2  	pass_uv;
+flat in int pass_textureID;
 
 out	vec4 vertexColor;
 
@@ -23,6 +24,8 @@ uniform sampler2D textureSampler;
 # define STATE_APPLY_FOG (1)
 # define STATE_APPLY_PHONG_LIGHTNING (2)
 
+# define TX_UNIT (1 / 5.0)
+
 void main(void) {
 
   	//lumiere diffuse
@@ -36,6 +39,9 @@ void main(void) {
 	  	diffuse *= intensity;
 	}
 
-	vec3 color = mix(texture(textureSampler, pass_uv * 16.0) * diffuse, sky_color, visibility);
+	float uvx = pass_uv.x * TX_UNIT + pass_textureID * TX_UNIT;
+	float uvy = pass_uv.y;
+	vec3 txcolor = texture(textureSampler, vec2(uvx, uvy)).rgb;
+	vec3 color = mix(txcolor * diffuse, sky_color, visibility);
 	vertexColor = vec4(color, 1.0);
 }

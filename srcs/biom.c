@@ -17,9 +17,9 @@ static int biomPlainGenColor(t_world * world, t_biom * biom, float wx, float wy,
 	float r = (wy + world->max_height) / (2 * world->max_height);
 	if (r <= 0.10f) {
 		return (TX_WATER);
-	} else if (r <= 0.65f) {
+	} else if (r <= 0.60f) {
 		return (TX_GRASS);
-	} else if (r <= 0.85f) {
+	} else if (r <= 0.75f) {
 		return (TX_DIRT);
 	} else if(r <= 0.90f) {
 		return (TX_STONE);
@@ -31,15 +31,27 @@ static int biomPlainGenColor(t_world * world, t_biom * biom, float wx, float wy,
 
 static float biomPlainGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
 	(void)biom;
-
+/*
 	float f = world->max_height;
-	float d1 = 0.002f;
+	float d1 = 0.005f;
 	float d2 = 0.01f;
 	float height = 0;
 	height += noise2(world->octaves[0], wx  * d1, wz * d1) * f;
 	height += noise2(world->octaves[1], wx  * d2, wz * d2) * f / 16.0f;
 	height = clamp(height, -f, f);
-	return (height);
+*/
+
+	float height = 0.0f;
+    float layerF = 0.009f;
+    float weight = 1;
+    const int iter = 3;
+    for (int i = 0 ; i < iter ; i++) {
+		height += noise2(world->octaves[i], wx * layerF, wz * layerF) * weight;
+        layerF *= 0.2f;
+        weight *= 2.0f;
+    }
+    height /= iter;
+	return (height * world->max_height);
 }
 
 static float biomHeightmapGenHeight(t_world * world, t_biom * biom, float wx, float wz) {

@@ -93,6 +93,11 @@ static void worldLoadNewTerrains(t_world * world, t_camera * camera) {
 	int gridX, gridY;
 	for (gridX = indexx ; gridX  < maxx; gridX++) {
 		for (gridY = indexy ; gridY < maxy; gridY++) {
+
+			if (gridX < 0 || gridY < 0) {
+				continue ;
+			}
+
 			if (worldGetTerrain(world, gridX, gridY) == NULL) {
 
 				//can a terrain be generated here?

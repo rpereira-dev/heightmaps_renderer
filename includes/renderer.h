@@ -73,7 +73,7 @@ typedef struct 	s_terrain {
 	int 	initialized;
 }				t_terrain;
 
-# define WORLD_OCTAVES (4)
+# define WORLD_OCTAVES (10)
 
 /** the world */
 typedef struct 	s_world {

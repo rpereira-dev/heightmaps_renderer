@@ -6,9 +6,10 @@ in float  height;
 in vec3   normal;
 in int    textureID;
 
-out float visibility;
-out vec3  pass_normal;
-out vec3  pass_color;
+out float     visibility;
+out vec3      pass_normal;
+out vec2      pass_uv;
+flat out int  pass_textureID;
 
 //view and projection matrix
 uniform mat4 mvp_matrix;
@@ -51,4 +52,5 @@ void main(void) {
 
     pass_normal = normal;
     pass_uv = uv;
+    pass_textureID = textureID;
 }
