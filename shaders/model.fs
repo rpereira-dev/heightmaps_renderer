@@ -16,7 +16,7 @@ uniform sampler2D textureSampler;
 # define TERRAIN_DETAIL (16)
 # define TERRAIN_SIZE (16)
 # define TERRAIN_UNIT (TERRAIN_SIZE / TERRAIN_DETAIL)
-# define TERRAIN_RENDER_DISTANCE (48)
+# define TERRAIN_RENDER_DISTANCE (64)
 # define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_LOADED_DISTANCE)
 # define MAX_NUMBER_OF_TERRAIN_LOADED (TERRAIN_KEEP_LOADED_DISTANCE * TERRAIN_KEEP_LOADED_DISTANCE * 2 * 2)
 # define TERRAIN_FLOATS_PER_VERTEX (3 + 3 + 1)
@@ -39,7 +39,7 @@ void main(void) {
 	  	diffuse *= intensity;
 	}
 
-	float uvx = pass_uv.x * TX_UNIT + pass_textureID * TX_UNIT;
+	float uvx = (pass_uv.x * TX_UNIT + pass_textureID * TX_UNIT);
 	float uvy = pass_uv.y;
 	vec3 txcolor = texture(textureSampler, vec2(uvx, uvy)).rgb;
 	vec3 color = mix(txcolor * diffuse, sky_color, visibility);

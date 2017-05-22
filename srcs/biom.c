@@ -14,8 +14,8 @@ static int biomPlainGenColor(t_world * world, t_biom * biom, float wx, float wy,
 	(void)world;
 	(void)biom;
 
-	float r = (wy + world->max_height) / (2 * world->max_height);
-	if (r <= 0.10f) {
+	float r = wy / world->max_height;
+	if (r <= -0.2f) {
 		return (TX_WATER);
 	} else if (r <= 0.60f) {
 		return (TX_GRASS);
@@ -27,7 +27,6 @@ static int biomPlainGenColor(t_world * world, t_biom * biom, float wx, float wy,
 		return (TX_SNOW);
 	}
 }
-
 
 static float biomPlainGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
 	(void)biom;
@@ -41,17 +40,23 @@ static float biomPlainGenHeight(t_world * world, t_biom * biom, float wx, float 
 	height = clamp(height, -f, f);
 */
 
-	float height = 0.0f;
-    float layerF = 0.009f;
-    float weight = 1;
-    const int iter = 3;
-    for (int i = 0 ; i < iter ; i++) {
-		height += noise2(world->octaves[i], wx * layerF, wz * layerF) * weight;
-        layerF *= 0.2f;
-        weight *= 2.0f;
+	float heightFactor = 0.0f;
+
+    heightFactor += noise2(world->octaves[0], wx * 0.003f, wz * 0.003f) * 1.0f;
+    heightFactor += noise2(world->octaves[1], wx * 0.01f, wz * 0.01f) * 0.2f;
+    heightFactor += noise2(world->octaves[1], wx * 0.1f, wz * 0.1f) * 0.01f;
+
+    float minHeight = -0.2f;
+    float maxHeight = 1.0f;
+    if (heightFactor < minHeight) {
+    	heightFactor = minHeight;
+    } else if (heightFactor > maxHeight) {
+    	heightFactor = maxHeight;
     }
-    height /= iter;
-	return (height * world->max_height);
+
+
+
+	return (world->max_height * heightFactor);
 }
 
 static float biomHeightmapGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
