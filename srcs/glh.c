@@ -35,6 +35,16 @@ t_glh_context * glhCreateContext(void) {
 	return (context);
 }
 
+GLuint glhGenTexture(void) {
+	GLuint txID = 0;
+	glGenTextures(1, &txID);
+	return (txID);
+}
+
+void glhDeleteTexture(GLuint txID) {
+	glDeleteTextures(1, &txID);
+}
+
 void glhDestroyContext(t_glh_context * context) {
 	if (_glh_context == context) {
 		_glh_context = NULL;
@@ -386,6 +396,10 @@ void glhVAOUnbind(void) {
 
 void glhVAOSetAttribute(GLuint attributeID, GLint length, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * offset) {
 	glVertexAttribPointer(attributeID, length, type, normalized, stride, offset);
+}
+
+void glhVAOSetAttributeI(GLuint attributeID, GLint length, GLenum type, GLsizei stride, const GLvoid * offset) {
+	glVertexAttribIPointer(attributeID, length, type, stride, offset);
 }
 
 void glhVAOEnableAttribute(GLuint id) {

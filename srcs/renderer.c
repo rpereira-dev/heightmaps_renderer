@@ -2,24 +2,21 @@
 
 GLuint u_mvp_matrix;
 GLuint u_transf_matrix;
-GLuint u_fog_density;
-GLuint u_fog_gradient;
 GLuint u_sky_color;
 GLuint u_state;
 GLuint u_time;
 
 static void rendererBindAttributes(t_glh_program * program) {
 	glhProgramBindAttribute(program, 0, "pos");
-	glhProgramBindAttribute(program, 1, "height");
-	glhProgramBindAttribute(program, 2, "normal");
-	glhProgramBindAttribute(program, 3, "color");
+	glhProgramBindAttribute(program, 1, "uv");
+	glhProgramBindAttribute(program, 2, "height");
+	glhProgramBindAttribute(program, 3, "normal");
+	glhProgramBindAttribute(program, 4, "textureID");
 }
 
 static void rendererLinkUniforms(t_glh_program * program) {
 	u_mvp_matrix = glhProgramGetUniform(program, "mvp_matrix");
 	u_transf_matrix = glhProgramGetUniform(program, "transf_matrix");
-	u_fog_density = glhProgramGetUniform(program, "fog_density");
-	u_fog_gradient = glhProgramGetUniform(program, "fog_gradient");
 	u_sky_color = glhProgramGetUniform(program, "sky_color");
 	u_state = glhProgramGetUniform(program, "state");
 	u_time = glhProgramGetUniform(program, "time");
@@ -59,7 +56,7 @@ static void rendererGenerateBufferIndices(t_renderer * renderer) {
 
 static void rendererGenerateBufferVertices(t_renderer * renderer) {
 	
-	long size = sizeof(float) * TERRAIN_DETAIL * TERRAIN_DETAIL * 2;
+	long size = sizeof(float) * 4 * TERRAIN_DETAIL * TERRAIN_DETAIL;
 	float * vertices = (float *) malloc(size);
 
 	float unit = 1 / (float)(TERRAIN_DETAIL - 1);
@@ -69,6 +66,8 @@ static void rendererGenerateBufferVertices(t_renderer * renderer) {
 		for (z = 0 ; z < TERRAIN_DETAIL ; z++) {
 			vertices[i++] = x * unit;
 			vertices[i++] = z * unit;
+			vertices[i++] = z / (float)(TERRAIN_DETAIL - 1) / (float)TX_MAX;
+			vertices[i++] = x / (float)(TERRAIN_DETAIL - 1);
 		}
 	}
 
@@ -107,6 +106,13 @@ void rendererInit(t_renderer * renderer) {
 	//initialize lists
 	renderer->render_list = array_list_new(256, sizeof(t_terrain *));
 	renderer->delete_list = array_list_new(256, sizeof(t_terrain *));
+
+	//image
+	renderer->texture.txID = glhGenTexture();
+	renderer->texture.image = imageNew("./res/textures.bmp");
+	unsigned char * pixels = (unsigned char*)(renderer->texture.image + 1);
+	glBindTexture(GL_TEXTURE_2D, renderer->texture.txID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, renderer->texture.image->w, renderer->texture.image->h, 0, GL_BGR, GL_UNSIGNED_BYTE, pixels);
 
 	//enable depth test
 	glEnable(GL_DEPTH_TEST);
@@ -151,21 +157,23 @@ static void rendererInitTerrain(t_renderer * renderer, t_terrain * terrain) {
 
 	//bind static grid
 	glhVBOBind(GL_ARRAY_BUFFER, renderer->terrain_vertices);
-	glhVAOSetAttribute(0, 2, GL_FLOAT, 0, 2 * sizeof(float), NULL); //default vertices
+	glhVAOSetAttribute(0, 2, GL_FLOAT, 0, 4 * sizeof(float), NULL); //default vertices pos
+	glhVAOSetAttribute(1, 2, GL_FLOAT, 0, 4 * sizeof(float), (void*)(2 * sizeof(float))); //default vertices uv
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 	glhVAOEnableAttribute(0);
+	glhVAOEnableAttribute(1);
 
 	//bind buffer
 	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
 	//set attruibutes
-	glhVAOSetAttribute(1, 1, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), NULL); //height
-	glhVAOSetAttribute(2, 3, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), (void*)(1 * sizeof(float))); //normal
-	glhVAOSetAttribute(3, 3, GL_FLOAT, 0, TERRAIN_FLOATS_PER_VERTEX * sizeof(float), (void*)((3 + 1) * sizeof(float))); //color
+	glhVAOSetAttribute(2, 1, GL_FLOAT, 0, TERRAIN_VERTEX_SIZE, NULL); //height
+	glhVAOSetAttribute(3, 3, GL_FLOAT, 0, TERRAIN_VERTEX_SIZE, (void*)(1 * sizeof(float))); //normal
+	glhVAOSetAttributeI(4, 3, GL_INT, TERRAIN_VERTEX_SIZE, (void*)((3 + 1) * sizeof(float))); //texture ID
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 	//enable attributes
-	glhVAOEnableAttribute(1);
 	glhVAOEnableAttribute(2);
 	glhVAOEnableAttribute(3);
+	glhVAOEnableAttribute(4);
 
 	//unbind vao
 	glhVAOUnbind();
@@ -231,6 +239,10 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	//viewport
 	glhViewPort(0, 0, context->window->width, context->window->height);
 
+	//set the texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, renderer->texture.txID);
+
     //clear color buffer
     glhClearColor(0.46f, 0.70f, 0.99f, 1.0f);
     glhClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -242,9 +254,6 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	glhProgramLoadUniformMatrix4f(u_mvp_matrix, (float*)&(camera->mviewproj));
 
 	//weather
-	float ratio = 1.0f / (float)(TERRAIN_RENDER_DISTANCE * TERRAIN_SIZE);
-	glhProgramLoadUniformFloat(u_fog_gradient, ratio * 4096.0f);
-	glhProgramLoadUniformFloat(u_fog_density, ratio * 1.5f);
 	glhProgramLoadUniformVec3f(u_sky_color, 0.46f, 0.70f, 0.99f);
 
 	//load state
@@ -274,7 +283,7 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 		if (terrain->vertices != NULL) {
 			glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
 			//set vertices
-			glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_FLOATS_PER_VERTEX * sizeof(float), terrain->vertices, GL_STATIC_DRAW);
+			glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_VERTEX_SIZE, terrain->vertices, GL_STATIC_DRAW);
 			//release data
 			free(terrain->vertices);
 			terrain->vertices = NULL;
@@ -310,4 +319,6 @@ void rendererDelete(t_renderer * renderer) {
 	array_list_delete(renderer->render_list);
 	array_list_delete(renderer->delete_list);
 	free(renderer->render_list);
+	imageDelete(renderer->texture.image);
+	glhDeleteTexture(renderer->texture.txID);
 }

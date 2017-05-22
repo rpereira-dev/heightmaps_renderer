@@ -4,7 +4,7 @@ static void worldLoadHeightmap(t_world * world, char * file) {
 	if (file == NULL) {
 		world->heightmap = NULL;
 	} else {
-		world->heightmap = heightmapNew(file);
+		world->heightmap = imageNew(file);
 	}
 }
 
@@ -43,7 +43,7 @@ void worldInit(t_world * world, char * bmpfile, int max_height) {
 }
 
 void worldDelete(t_world * world) {
-	heightmapDelete(world->heightmap);
+	imageDelete(world->heightmap);
 	array_list_delete(world->bioms);
 	free(world->bioms);
 	hmap_delete(world->terrains);

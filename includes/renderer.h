@@ -43,14 +43,26 @@ typedef struct	s_camera {
 # define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_LOADED_DISTANCE)
 # define MAX_NUMBER_OF_TERRAIN_LOADED (TERRAIN_KEEP_LOADED_DISTANCE * TERRAIN_KEEP_LOADED_DISTANCE * 2 * 2)
 // number of floats per vertex
-# define TERRAIN_FLOATS_PER_VERTEX (3 + 3 + 1)
+# define TERRAIN_VERTEX_SIZE ((1 + 3) * sizeof(float) + 1 * sizeof(int))
 
 # define STATE_APPLY_FOG (1)
 # define STATE_APPLY_PHONG_LIGHTNING (2)
 
-typedef struct 	s_heightmap {
+# define TX_WATER (0)
+# define TX_GRASS (1)
+# define TX_DIRT (2)
+# define TX_STONE (3)
+# define TX_SNOW (4)
+# define TX_MAX (5)
+
+typedef struct 	s_image {
 	int w, h;
-}				t_heightmap;
+}				t_image;
+
+typedef struct 	s_texture {
+	t_image * image;
+	GLuint 	txID;
+}				t_texture;
 
 /** a terrain */
 typedef struct 	s_terrain {
@@ -69,13 +81,13 @@ typedef struct 	s_world {
 	t_noise			* octaves[WORLD_OCTAVES];
 	t_array_list	* bioms;
 	int 			max_height;
-	t_heightmap		* heightmap;
+	t_image			* heightmap;
 	int 			time;
 }				t_world;
 
 typedef struct 	s_biom {
 	float (*heightGen)(t_world *, struct s_biom *, float, float);
-	void (*colorGen)(t_world *, struct s_biom *, t_vec3f *, float, float, float);
+	int (*colorGen)(t_world *, struct s_biom *, float, float, float);
 	int (*canGenerateAt)(t_world *, struct s_biom *, float, float);
 }				t_biom;
 
@@ -87,6 +99,7 @@ typedef struct 	s_renderer {
 	t_array_list 	* render_list; //the list of terrain to render
 	t_array_list 	* delete_list; //the list of terrain to delete
 	int 			state; //the state for rendering
+	t_texture 		texture;
 }				t_renderer;
 
 typedef struct 	s_env {
@@ -129,9 +142,9 @@ void cameraDelete(t_camera * camera);
 void cameraUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera);
 
 //heightmaps (bmp file)
-t_heightmap *	heightmapNew(char const * path);
-void 			heightmapDelete(t_heightmap * map);
-int 			heightmapGetHeight(t_heightmap * map, int x, int y);
+t_image		 *	imageNew(char const * path);
+void 			imageDelete(t_image * t_image);
+int 			heightmapGetHeight(t_image * image, int x, int y);
 
 //inputs
 void inputInit(t_glh_context * context);

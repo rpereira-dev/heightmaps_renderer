@@ -89,6 +89,10 @@ void glhSwapBuffer(t_glh_window * window);
 void glhClear(int bufferbits);
 void glhClearColor(float r, float g, float b, float a);
 
+//textures
+GLuint glhGenTexture(void);
+void glhDeleteTexture(GLuint txID);
+
 /** program functions */
 t_glh_program *	glhProgramNew(void);
 int 			glhProgramAddShader(t_glh_program * program, GLuint shaderID, int shaderType);
@@ -120,6 +124,7 @@ void glhVAOUnbind(void);
 void glhVBOData(GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage);
 
 void glhVAOSetAttribute(GLuint attributeID, GLint length, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * offset);
+void glhVAOSetAttributeI(GLuint attributeID, GLint length, GLenum type, GLsizei stride, const GLvoid * offset);
 void glhVAOEnableAttribute(GLuint id);
 
 void glhVBOBind(GLuint target, GLuint vbo);

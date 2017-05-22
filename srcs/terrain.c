@@ -12,7 +12,7 @@ static void terrainCalculateNormal(t_world * world, t_biom * biom, t_vec3f * nor
 }
 
 static void terrainGenerateVertices(t_world * world, float vertices[], int gridX, int gridY) {
-	t_vec3f color, normal;
+	t_vec3f normal;
 	int x, y;
 	int i = 0;
 	for (x = 0 ; x < TERRAIN_DETAIL ; x++) {
@@ -22,20 +22,18 @@ static void terrainGenerateVertices(t_world * world, float vertices[], int gridX
 			float wz = (gridY * (TERRAIN_DETAIL - 1) + y) * TERRAIN_UNIT;
 			t_biom * biom = worldGetBiomAt(world, wx, wz);
 			float wy = biom->heightGen(world, biom, wx, wz);
-			biom->colorGen(world, biom, &color, wx, wy, wz);
+			int textureID = biom->colorGen(world, biom, wx, wy, wz);
 			terrainCalculateNormal(world, biom, &normal, wx, wz);
 
-			vertices[i++] = wy;
+			*(vertices + i++) = wy;
 
 			//generate normal
-			vertices[i++] = normal.x;
-			vertices[i++] = normal.y;
-			vertices[i++] = normal.z;
+			*(vertices + i++) = normal.x;
+			*(vertices + i++) = normal.y;
+			*(vertices + i++) = normal.z;
 
-			//generate color
-			vertices[i++] = color.r;
-			vertices[i++] = color.g;
-			vertices[i++] = color.b;
+			//generate texture id
+			*((int*)(vertices + i++)) = textureID;
 		}
 	}
 }
@@ -52,7 +50,7 @@ void terrainLoadvertices(t_terrain * terrains, int * n, char const * bmpfile) {
 void terrainGenerate(t_world * world, t_terrain * terrain) {
 	int gridX = terrain->index.x;
 	int gridY = terrain->index.y;
-	terrain->vertices = (float *) malloc(sizeof(float) * TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_FLOATS_PER_VERTEX);
+	terrain->vertices = (float *) malloc(TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_VERTEX_SIZE);
 	terrainGenerateVertices(world, terrain->vertices, gridX, gridY);
 }
 
