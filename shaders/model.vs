@@ -24,7 +24,7 @@ uniform int time;
 # define TERRAIN_DETAIL (16)
 # define TERRAIN_SIZE (16)
 # define TERRAIN_UNIT (TERRAIN_SIZE / TERRAIN_DETAIL)
-# define TERRAIN_RENDER_DISTANCE (64)
+# define TERRAIN_RENDER_DISTANCE (32)
 # define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_LOADED_DISTANCE)
 # define MAX_NUMBER_OF_TERRAIN_LOADED (TERRAIN_KEEP_LOADED_DISTANCE * TERRAIN_KEEP_LOADED_DISTANCE * 2 * 2)
 # define TERRAIN_FLOATS_PER_VERTEX (3 + 3 + 1)
@@ -34,7 +34,7 @@ uniform int time;
 # define STATE_APPLY_PHONG_LIGHTNING (2)
 
 void main(void) {
-	vec4 world_pos = transf_matrix * vec4(pos.x, height, pos.y, 1.0);
+    vec4 world_pos = transf_matrix * vec4(pos.x, height, pos.y, 1.0);
   	gl_Position = mvp_matrix * world_pos;
 
   	//fog calculation

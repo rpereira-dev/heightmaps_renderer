@@ -117,7 +117,6 @@ void rendererInit(t_renderer * renderer) {
 
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.6f);
 
 	//enable depth test
@@ -125,29 +124,13 @@ void rendererInit(t_renderer * renderer) {
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
+	//swap interval for 60 fps max
+	glfwSwapInterval(1);
 
 	glhCheckError("post rendererInit()");
 }
 
-static void rendererDeinitTerrain(t_renderer * renderer, t_terrain * terrain) {
-	(void)renderer;
-
-	if (terrain->initialized) {
-		terrain->initialized = 0;
-		glhVAODelete(terrain->vao);
-		glhVBODelete(terrain->vbo);
-	}
-	
-	if (terrain->vertices != NULL) {
-		free(terrain->vertices);
-		terrain->vertices = NULL;
-	}
-	free(terrain);
-}
-
 static void rendererInitTerrain(t_renderer * renderer, t_terrain * terrain) {
-
-	(void)renderer;
 
 	terrain->initialized = 1;
 
@@ -185,15 +168,15 @@ static void rendererInitTerrain(t_renderer * renderer, t_terrain * terrain) {
 	glhVAOUnbind();
 }
 
-static void rendererUpdateLists(t_world * world, t_renderer * renderer, t_camera * camera) {
+int i = 0;
 
-	(void)camera;
-
-	//clear list
+void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
+	(void)context;
+	//clear lists
 	array_list_clear(renderer->render_list);
 	array_list_clear(renderer->delete_list);
 
-	//update listst
+	//update lists
 	HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
 		
 		t_vec3f diff;
@@ -202,7 +185,8 @@ static void rendererUpdateLists(t_world * world, t_renderer * renderer, t_camera
 		diff.z = terrain->index.y - camera->terrain_index.y;
 
 			//if to far, delete this terrain
-		if (diff.x > TERRAIN_KEEP_LOADED_DISTANCE || diff.z > TERRAIN_KEEP_LOADED_DISTANCE) {
+		if (diff.x <= -TERRAIN_KEEP_LOADED_DISTANCE || diff.z <= -TERRAIN_KEEP_LOADED_DISTANCE ||
+			diff.x >= TERRAIN_KEEP_LOADED_DISTANCE || diff.z >= TERRAIN_KEEP_LOADED_DISTANCE) {
 			array_list_add(renderer->delete_list, &terrain);
 		} else {
 
@@ -221,26 +205,19 @@ static void rendererUpdateLists(t_world * world, t_renderer * renderer, t_camera
 	}
 	HMAP_ITER_END(world->terrains, t_terrain *, terrain);
 
-
 	//remove terrains
 	ARRAY_LIST_ITER_START(renderer->delete_list, t_terrain **, terrain_ptr, i) {
 		t_terrain * terrain = *terrain_ptr;
 		hmap_remove_key(world->terrains, &(terrain->index));
-		rendererDeinitTerrain(renderer, terrain);
+		terrainDelete(terrain);
 	}
 	ARRAY_LIST_ITER_END(renderer->delete_list, t_terrain **, terrain_ptr, i);
 
 	array_list_clear(renderer->delete_list);
-}
 
-void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
-	(void)context;
-	rendererUpdateLists(world, renderer, camera);
 }
 
 void rendererRender(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
-	(void)context;
-	(void)world;
 
 	//viewport
 	glhViewPort(0, 0, context->window->width, context->window->height);
@@ -275,20 +252,22 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 
 	int vertexCount = (TERRAIN_DETAIL - 1) * (TERRAIN_DETAIL - 1) * 6;
 
-	//render every terrain that has to
+	//for every terrain which has to be rendered
 	ARRAY_LIST_ITER_START(renderer->render_list, t_terrain **, terrain_ptr, i) {
 
 		//get the terrain
 		t_terrain * terrain = *terrain_ptr;
 
-		//check terrain vertices
+		//if it is not initialized
 		if (!terrain->initialized) {
+			//initialized it
 			rendererInitTerrain(renderer, terrain);
 		}
 
+		//if it vertices arent up to date
 		if (terrain->vertices != NULL) {
+			//update them
 			glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-			//set vertices
 			glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_VERTEX_SIZE, terrain->vertices, GL_STATIC_DRAW);
 			//release data
 			free(terrain->vertices);

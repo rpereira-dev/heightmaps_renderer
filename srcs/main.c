@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     int optind;
     char mode = 'r';
     long seed = time(NULL);
-    int maxheight = TERRAIN_SIZE;
+    float maxheight = 1.0f;
     char * bmpfile = NULL;
     for (optind = 1; optind < argc; optind++) {
 
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
     	switch (argv[optind][1]) {
     		case 'r': if (optind + 1 < argc) { seed = atoi(argv[++optind]); } break;
     		case 'f': if (optind + 1 >= argc) { printUsage(binary, stderr); return (EXIT_FAILURE); } else { bmpfile = strdup(argv[++optind]); } break;
-    		case 'h': if (optind + 1 >= argc) { printUsage(binary, stderr); return (EXIT_FAILURE); } else { maxheight = atoi(argv[++optind]); } break;
+    		case 'h': if (optind + 1 >= argc) { printUsage(binary, stderr); return (EXIT_FAILURE); } else { maxheight = atof(argv[++optind]); } break;
     		default: printUsage(binary, stderr); return (EXIT_FAILURE);
         }   
     }
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 		printUsage(binary, stdout);
 		printf("\n");
     }
-    printf("{mode='%c'}, {seed='%ld'}, {maxheight='%d'}, {bmpfile='%s'}\n\n", mode, seed, maxheight, bmpfile);
+    printf("{mode='%c'}, {seed='%ld'}, {maxheight='%f'}, {bmpfile='%s'}\n\n", mode, seed, maxheight, bmpfile);
 
 	printf("Initializing openGL...\n");
 
@@ -120,8 +120,6 @@ int main(int argc, char **argv) {
 	long int count = 0;
 
 	env.is_running = 1;
-
-	glfwSwapInterval(1);
 
     while (!glhWindowShouldClose(context->window) && env.is_running) {
 

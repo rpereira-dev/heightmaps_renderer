@@ -64,7 +64,7 @@ static void inputUpdateDebug(t_glh_context * context, t_world * world, t_rendere
 	printf("\n");
 	printf("--------------------- WORLD ----------------------------\n");
 	printf("\n");
-	printf("%*s: %lu\n", padding, "loaded terrains", world->terrains->size);
+	printf("%*s: %lu/%d\n", padding, "loaded terrains", world->terrains->size, TERRAIN_KEEP_LOADED_DISTANCE * TERRAIN_KEEP_LOADED_DISTANCE * 4);
 	printf("\n");
 
 	printf("-------------------- RENDERER --------------------------\n");
@@ -102,7 +102,7 @@ static void inputUpdateDebug(t_glh_context * context, t_world * world, t_rendere
 
 static void inputUpdateCamera(t_camera * camera) {
 
-	static float movespeed = 6.5f;
+	float movespeed = camera->movespeed;
 	static float rotspeed = 1.0f;
 
 	t_glh_window * win = glhGetWindow();
@@ -111,6 +111,11 @@ static void inputUpdateCamera(t_camera * camera) {
 		return ;
 	}
 
+	if (glfwGetKey(win->pointer, GLFW_KEY_KP_ADD) == GLFW_PRESS) {
+		camera->movespeed *= 2.0f;
+	} else if (glfwGetKey(win->pointer, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS) {
+		camera->movespeed *= 0.5f;
+	}
 	//rotation
 	camera->rot.pitch += ((win->mouseY - win->prev_mouseY) * 0.3f * rotspeed);
 	camera->rot.yaw += ((win->mouseX - win->prev_mouseX) * 0.3f * rotspeed);

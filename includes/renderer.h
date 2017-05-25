@@ -24,6 +24,7 @@ typedef struct	s_camera {
 	float	fov; //field of view
 	float 	near_distance; //near plane distance
 	float	far_distance; //far plane distance
+	float 	movespeed; // move speed
 	t_mat4f	mview; //view matrix
 	t_mat4f	mproj; //projection matrix
 	t_mat4f	mviewproj; //projection matrix times view matrix
@@ -36,9 +37,9 @@ typedef struct	s_camera {
 # define TERRAIN_SIZE (16)
 # define TERRAIN_UNIT (TERRAIN_SIZE / TERRAIN_DETAIL)
 // number of terrain to render in term of distance
-# define TERRAIN_RENDER_DISTANCE (64)
+# define TERRAIN_RENDER_DISTANCE (32)
 // distance where terrain are kept loaded in memory
-# define TERRAIN_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE + 4)
+# define TERRAIN_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE * 2)
 // distance where terrain are kept loaded in memory
 # define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_LOADED_DISTANCE)
 # define MAX_NUMBER_OF_TERRAIN_LOADED (TERRAIN_KEEP_LOADED_DISTANCE * TERRAIN_KEEP_LOADED_DISTANCE * 2 * 2)
@@ -80,13 +81,14 @@ typedef struct 	s_world {
 	t_hmap 			* terrains;
 	t_noise			* octaves[WORLD_OCTAVES];
 	t_array_list	* bioms;
-	int 			max_height;
+	float 			max_height;
 	t_image			* heightmap;
 	int 			time;
 }				t_world;
 
 typedef struct 	s_biom {
 	float (*heightGen)(t_world *, struct s_biom *, float, float);
+	float heightGenStep; //the heightgen function step
 	int (*colorGen)(t_world *, struct s_biom *, float, float, float);
 	int (*canGenerateAt)(t_world *, struct s_biom *, float, float);
 }				t_biom;
@@ -118,7 +120,7 @@ void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * rende
 void rendererRender(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera);
 
 //world related functions
-void 		worldInit(t_world * world, char * bmpfile, int maxheight);
+void 		worldInit(t_world * world, char * bmpfile, float maxheight);
 void 		worldDelete(t_world * world);
 void 		worldUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera);
 void 		worldGetGridIndex(t_world * world, float worldX, float worldZ, int * gridX, int * gridY);
@@ -131,6 +133,7 @@ void 	biomsDelete(t_world * world);
 
 //terrains
 t_terrain *	terrainNew(t_world * world, int gridX, int gridY);
+void 		terrainDelete(t_terrain * terrain);
 int 		terrainHash(t_terrain * terrain);
 int 		terrainCmp(t_terrain * left, t_terrain * right);
 void		terrainLoadHeightMap(t_terrain * terrains, int * n, char const * bmpfile);
@@ -144,7 +147,7 @@ void cameraUpdate(t_glh_context * context, t_world * world, t_renderer * rendere
 //heightmaps (bmp file)
 t_image		 *	imageNew(char const * path);
 void 			imageDelete(t_image * t_image);
-int 			heightmapGetHeight(t_image * image, int x, int y);
+int 			heightmapGetHeight(t_image * image, float x, float y);
 
 //inputs
 void inputInit(t_glh_context * context);

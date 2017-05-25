@@ -1,5 +1,8 @@
 #include "noise.h"
 
+//SIMPLEX NOISE IMPLEMENTATION
+
+
 /** the default permutation raw array */
 static unsigned char default_permutation[] = {
 	151, 160, 137, 91, 90, 15, 8, 99, 37, 240, 21, 10, 23, 131, 13, 201,
@@ -87,7 +90,7 @@ static float grad2(int hash, float x, float y) {
 	}
 }
 
-float noise2(t_noise * noise, float x, float y) {
+float snoise2(t_noise * noise, float x, float y) {
 	static float F2 = 0.3660254037f;
 	static float G2 = 0.2113248654f;
 	static float TWO_G2 = 2.0f * 0.2113248654f;
@@ -163,7 +166,7 @@ static float grad3(int hash, float x, float y, float z) {
 }
 
 
-float noise3(t_noise * noise, float x, float y, float z) {
+float snoise3(t_noise * noise, float x, float y, float z) {
 	static float F3 = 1.0f / 3.0f;
 	static float G3 = 1.0f / 6.0f;
 
@@ -288,4 +291,33 @@ float noise3(t_noise * noise, float x, float y, float z) {
     }
     
     return (32.0f * (n0 + n1 + n2 + n3));
+}
+
+
+//PERLIN NOISE IMPLEMENTATION
+static int phash(t_noise * noise, int x, int y) {
+    return (noise->p[(noise->p[y % 256] + x) % 256]);
+}
+
+static float lin_inter(float x, float y, float s) {
+    return (x + s * (y - x));
+}
+
+static float smooth_inter(float x, float y, float s) {
+    return (lin_inter(x, y, s * s * (3-2*s)));
+}
+
+float pnoise2(t_noise * noise, float x, float y) {
+    int x_i = (int)x;
+    int y_i = (int)y;
+    float x_dec = x - x_i;
+    float y_dec = y - y_i;
+    int s = phash(noise, x_i, y_i);
+    int t = phash(noise, x_i + 1, y_i);
+    int u = phash(noise, x_i, y_i + 1);
+    int v = phash(noise, x_i +  1, y_i + 1);
+    float low = smooth_inter(s, t, x_dec);
+    float high = smooth_inter(u, v, x_dec);
+    float n = smooth_inter(low, high, y_dec) / 256.0f;
+    return (n * 2.0f - 1);
 }

@@ -8,7 +8,7 @@ static void worldLoadHeightmap(t_world * world, char * file) {
 	}
 }
 
-void worldInit(t_world * world, char * bmpfile, int max_height) {
+void worldInit(t_world * world, char * bmpfile, float max_height) {
 	glhCheckError("pre worldInit()");
 
 	world->time = 0;
@@ -43,9 +43,15 @@ void worldInit(t_world * world, char * bmpfile, int max_height) {
 }
 
 void worldDelete(t_world * world) {
-	imageDelete(world->heightmap);
-	array_list_delete(world->bioms);
-	free(world->bioms);
+	if (world->heightmap != NULL) {
+		imageDelete(world->heightmap);
+	}
+
+	HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
+		terrainDelete(terrain);
+	}
+	HMAP_ITER_END(world->terrains, t_terrain *, terrain);
+
 	hmap_delete(world->terrains);
 	free(world->terrains);
 
@@ -53,6 +59,7 @@ void worldDelete(t_world * world) {
 	for (i = 0 ; i < WORLD_OCTAVES ; i++) {
 		noiseDelete(world->octaves[i]);
 	}
+
 	biomsDelete(world);
 }
 
@@ -98,9 +105,11 @@ static void worldLoadNewTerrains(t_world * world, t_camera * camera) {
 				continue ;
 			}
 
+
+			//if this terrain isnt generated yet
 			if (worldGetTerrain(world, gridX, gridY) == NULL) {
 
-				//can a terrain be generated here?
+				//can it be generated?
 				float wx = gridX * TERRAIN_SIZE;
 				float wz = gridY * TERRAIN_SIZE;
 				t_biom * biom = worldGetBiomAt(world, wx, wz);
@@ -110,6 +119,7 @@ static void worldLoadNewTerrains(t_world * world, t_camera * camera) {
 
 				//if so, generate it
 				t_terrain * terrain = terrainNew(world, gridX, gridY);
+
 				if (terrain != NULL) {
 					hmap_insert(world->terrains, terrain, &(terrain->index));
 				}
@@ -120,9 +130,7 @@ static void worldLoadNewTerrains(t_world * world, t_camera * camera) {
 
 void worldUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
 	(void)context;
-	(void)world;
 	(void)renderer;
-	(void)camera;
 
 	//load new terrains
 	worldLoadNewTerrains(world, camera);

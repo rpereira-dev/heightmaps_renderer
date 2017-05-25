@@ -16,7 +16,7 @@ uniform sampler2D textureSampler;
 # define TERRAIN_DETAIL (16)
 # define TERRAIN_SIZE (16)
 # define TERRAIN_UNIT (TERRAIN_SIZE / TERRAIN_DETAIL)
-# define TERRAIN_RENDER_DISTANCE (64)
+# define TERRAIN_RENDER_DISTANCE (32)
 # define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_LOADED_DISTANCE)
 # define MAX_NUMBER_OF_TERRAIN_LOADED (TERRAIN_KEEP_LOADED_DISTANCE * TERRAIN_KEEP_LOADED_DISTANCE * 2 * 2)
 # define TERRAIN_FLOATS_PER_VERTEX (3 + 3 + 1)
@@ -33,9 +33,9 @@ void main(void) {
 
   	//phong ligthing model
   	if ((state & STATE_APPLY_PHONG_LIGHTNING) != STATE_APPLY_PHONG_LIGHTNING) {
-  		vec3 sun = normalize(vec3(1.0, 0.8, 1.0));
+  		vec3 sun = normalize(vec3(1.0, 1.0, 0.2));
 	  	float n = dot(pass_normal, sun);
-	  	float intensity = max(n, 0.2);
+	  	float intensity = max(n, 0.3);
 	  	diffuse *= intensity;
 	}
 

@@ -7,7 +7,7 @@ static float clamp(float val, float min, float max) {
     return (val < min ? min : val);
 }
 
-static int biomPlainGenColor(t_world * world, t_biom * biom, float wx, float wy, float wz) {
+static int biomMountainGenColor(t_world * world, t_biom * biom, float wx, float wy, float wz) {
 
 	(void)wz;
 	(void)wx;
@@ -15,7 +15,7 @@ static int biomPlainGenColor(t_world * world, t_biom * biom, float wx, float wy,
 	(void)biom;
 
 	float r = wy / world->max_height;
-	if (r <= -0.2f) {
+	if (r <= 0.08f) {
 		return (TX_WATER);
 	} else if (r <= 0.60f) {
 		return (TX_GRASS);
@@ -28,7 +28,7 @@ static int biomPlainGenColor(t_world * world, t_biom * biom, float wx, float wy,
 	}
 }
 
-static float biomPlainGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
+static float biomMountainGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
 	(void)biom;
 /*
 	float f = world->max_height;
@@ -40,13 +40,22 @@ static float biomPlainGenHeight(t_world * world, t_biom * biom, float wx, float 
 	height = clamp(height, -f, f);
 */
 
+
 	float heightFactor = 0.0f;
 
-    heightFactor += noise2(world->octaves[0], wx * 0.003f, wz * 0.003f) * 1.0f;
-    heightFactor += noise2(world->octaves[1], wx * 0.01f, wz * 0.01f) * 0.2f;
-    heightFactor += noise2(world->octaves[1], wx * 0.1f, wz * 0.1f) * 0.01f;
+    float layerF = 0.04f;
+    float weight = 1.0f;
+    for (int i = 0 ; i < 5 ; i++)
+    {
+        heightFactor += pnoise2(world->octaves[i], wx * layerF, wz * layerF) * weight;
+        layerF *= 2.0f;
+        weight *= 0.5f;
+    }
 
-    float minHeight = -0.2f;
+    heightFactor += 1;
+    heightFactor *= 0.5f;
+
+    float minHeight = 0.08f;
     float maxHeight = 1.0f;
     if (heightFactor < minHeight) {
     	heightFactor = minHeight;
@@ -54,13 +63,12 @@ static float biomPlainGenHeight(t_world * world, t_biom * biom, float wx, float 
     	heightFactor = maxHeight;
     }
 
-
-
 	return (world->max_height * heightFactor);
 }
 
 static float biomHeightmapGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
 	(void)biom;
+
 	float f = world->max_height;
 	int px = (int)(wx / TERRAIN_UNIT);
 	int py = (int)(wz / TERRAIN_UNIT);
@@ -68,8 +76,9 @@ static float biomHeightmapGenHeight(t_world * world, t_biom * biom, float wx, fl
 	py = clamp(py, 0, world->heightmap->h - 1);
 
 	int rgb = heightmapGetHeight(world->heightmap, px, py);
-	float height = (rgb / (255.0f * 3.0f) * 2 - 1) * f;
+	float height = rgb / (255.0f * 3.0f) * f;
 	height = clamp(height, -f, f);
+
 	return (height);
 }
 
@@ -90,10 +99,12 @@ static int biomCanGenerate(t_world * world, t_biom * biom, float wx, float wz) {
 
 static void biomRegister(t_world * world,
 							float (*heightGen)(t_world *, struct s_biom *, float, float),
+							float heightGenStep,
 							int (*colorGen)(t_world *, struct s_biom *, float, float, float),
 							int (*canGen)(t_world *, struct s_biom *, float, float)) {
 	t_biom biom;
 	biom.heightGen = heightGen;
+	biom.heightGenStep = heightGenStep;
 	biom.colorGen = colorGen;
 	biom.canGenerateAt = canGen;
 	array_list_add(world->bioms, &biom);
@@ -102,13 +113,14 @@ static void biomRegister(t_world * world,
 void biomsInit(t_world * world) {
 	if (world->heightmap == NULL) {
 		printf("No heightmaps set, generating terrain procedurally\n");
-		biomRegister(world, biomPlainGenHeight, biomPlainGenColor, biomCanGenerate);
+		biomRegister(world, biomMountainGenHeight, TERRAIN_UNIT / 16.0f, biomMountainGenColor, biomCanGenerate);
 	} else {
 		printf("Heightmap in use\n");
-		biomRegister(world, biomHeightmapGenHeight, biomPlainGenColor, biomHeightmapCanGenerate);
+		biomRegister(world, biomHeightmapGenHeight, TERRAIN_UNIT, biomMountainGenColor, biomHeightmapCanGenerate);
 	}
 }
 
 void biomsDelete(t_world * world) {
-	array_list_clear(world->bioms);
+	array_list_delete(world->bioms);
+	free(world->bioms);
 }

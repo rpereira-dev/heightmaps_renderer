@@ -2,11 +2,12 @@
 
 void cameraInit(t_camera * camera) {
 
-	camera->pos.x = TERRAIN_SIZE * 0, camera->pos.y = TERRAIN_SIZE * 2, camera->pos.z = TERRAIN_SIZE * 0;
+	camera->pos.x = TERRAIN_SIZE * 2, camera->pos.y = TERRAIN_SIZE * 2, camera->pos.z = TERRAIN_SIZE * 2;
 	camera->rot.pitch = 0, camera->rot.yaw = 0, camera->rot.roll = 0;
 	camera->fov = DEG_TO_RAD(70.0f);
 	camera->near_distance = 0.01f;
 	camera->far_distance = TERRAIN_RENDER_DISTANCE * TERRAIN_RENDER_DISTANCE * TERRAIN_SIZE;
+	camera->movespeed = 2.0f;
 }
 
 void cameraDelete(t_camera * camera) {
