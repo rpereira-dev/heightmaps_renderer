@@ -123,8 +123,6 @@ int main(int argc, char **argv) {
 
     while (!glhWindowShouldClose(context->window) && env.is_running) {
 
-    	long t1;
-    	MICROSEC(t1);
 
     	//update the window
     	glhWindowUpdate(context->window);
@@ -143,11 +141,8 @@ int main(int argc, char **argv) {
 
     	//render
     	rendererRender(context, world, renderer, camera);
-    	
-    	//glhCheckError("post rendererUpdate()");
 
-    	long t2;
-    	MICROSEC(t2);
+    	//glhCheckError("post rendererUpdate()");
 
     	total += (t2 - t1);
     	count++;

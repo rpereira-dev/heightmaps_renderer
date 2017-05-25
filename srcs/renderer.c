@@ -156,8 +156,8 @@ static void rendererInitTerrain(t_renderer * renderer, t_terrain * terrain) {
 	glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
 	//set attruibutes
 	glhVAOSetAttribute(2, 1, GL_FLOAT, 0, TERRAIN_VERTEX_SIZE, NULL); //height
-	glhVAOSetAttribute(3, 3, GL_FLOAT, 0, TERRAIN_VERTEX_SIZE, (void*)(1 * sizeof(float))); //normal
-	glhVAOSetAttributeI(4, 3, GL_INT, TERRAIN_VERTEX_SIZE, (void*)((3 + 1) * sizeof(float))); //texture ID
+	glhVAOSetAttribute(3, 2, GL_FLOAT, 0, TERRAIN_VERTEX_SIZE, (void*)(1 * sizeof(float))); //normal
+	glhVAOSetAttributeI(4, 3, GL_INT, TERRAIN_VERTEX_SIZE, (void*)((2 + 1) * sizeof(float))); //texture ID
 	glhVBOUnbind(GL_ARRAY_BUFFER);
 	//enable attributes
 	glhVAOEnableAttribute(2);
@@ -190,14 +190,7 @@ void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * rende
 
 			float distance = vec3f_length(&diff);
 			if (distance < TERRAIN_RENDER_DISTANCE) {
-				//float normalizer = 1 / distance;
-				//diff.x *= normalizer;
-				//diff.z *= normalizer;
-				//float dot = vec3f_dot_product(&(camera->vview), &diff);
-				//float angle = acos_f(dot);
-				//if (distance <= 2 || angle < camera->fov + 0.01f) {
-					array_list_add(renderer->render_list, &terrain);
-			//	}
+				array_list_add(renderer->render_list, &terrain);
 			}
 		}
 	}
@@ -247,7 +240,10 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
+	//vertex per terrain
 	int vertexCount = (TERRAIN_DETAIL - 1) * (TERRAIN_DETAIL - 1) * 6;
+
+	//total vertex drawn
 	renderer->vertexCount = 0;
 
 	//for every terrain which has to be rendered
@@ -273,7 +269,7 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 			glhVBOUnbind(GL_ARRAY_BUFFER);
 		}
 
-		//generate the transformation matrix
+		//generate the transformation matrix for this terrain
 		t_mat4f mat;
 		mat4f_identity(&mat);
 		mat4f_translate(&mat, &mat, terrain->index.x * TERRAIN_SIZE, 0, terrain->index.y * TERRAIN_SIZE);

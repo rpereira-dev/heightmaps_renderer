@@ -3,7 +3,7 @@
 in vec2   pos;
 in vec2   uv;
 in float  height;
-in vec3   normal;
+in vec2   normal;
 in int    textureID;
 
 out float     visibility;
@@ -22,7 +22,7 @@ uniform int state;
 uniform int time;
 
 # define TERRAIN_DETAIL (16)
-# define TERRAIN_SIZE (16)
+# define TERRAIN_SIZE (16.0)
 # define TERRAIN_UNIT (TERRAIN_SIZE / TERRAIN_DETAIL)
 # define TERRAIN_RENDER_DISTANCE (32)
 # define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_LOADED_DISTANCE)
@@ -42,15 +42,13 @@ void main(void) {
   	if ((state & STATE_APPLY_FOG) != STATE_APPLY_FOG) {
       //visibility^8
   		visibility = length(gl_Position.xz) / float(RENDER_DISTANCE);
-      visibility += sin(time * 0.1f) * 0.025f + sin(42.0f + time * 0.1f) * 0.01f + sin(42.5f + time * 0.1f) * 0.01f;
-
       visibility = visibility * visibility;
       visibility = visibility * visibility;
       visibility = visibility * visibility;
       visibility = clamp(visibility, 0, 1);
   	}
 
-    pass_normal = normal;
+    pass_normal = normalize(vec3(normal.x, 1.0 / TERRAIN_SIZE, normal.y));
     pass_uv = uv;
     pass_textureID = textureID;
 }

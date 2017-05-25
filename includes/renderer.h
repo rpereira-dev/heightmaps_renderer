@@ -44,7 +44,7 @@ typedef struct	s_camera {
 # define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_LOADED_DISTANCE)
 # define MAX_NUMBER_OF_TERRAIN_LOADED (TERRAIN_KEEP_LOADED_DISTANCE * TERRAIN_KEEP_LOADED_DISTANCE * 2 * 2)
 // number of floats per vertex
-# define TERRAIN_VERTEX_SIZE ((1 + 3) * sizeof(float) + 1 * sizeof(int))
+# define TERRAIN_VERTEX_SIZE ((1 + 2) * sizeof(float) + 1 * sizeof(int))
 
 # define STATE_APPLY_FOG (1)
 # define STATE_APPLY_PHONG_LIGHTNING (2)

@@ -1,6 +1,6 @@
 #include "renderer.h"
 
-static void terrainCalculateNormal(t_world * world, t_biom * biom, t_vec3f * normal, float wx, float wz) {
+static void terrainCalculateNormal(t_world * world, t_biom * biom, float * nx, float * nz, float wx, float wz) {
 
 	float dx = biom->heightGenStep;
 	float dz = biom->heightGenStep;
@@ -20,13 +20,14 @@ static void terrainCalculateNormal(t_world * world, t_biom * biom, t_vec3f * nor
 		dh/dz = (h(x, z + 1) - h(x, z - 1)) / 2.0f
 	*/
 
-	vec3f_set(normal, (right - left) / (2.0f * dx), 1.0f / (float)TERRAIN_SIZE, (up - down) / (2.0f * dz));
-	vec3f_normalize(normal, normal);
+	*nx = (right - left) / (2.0f * dx);
+	//*ny = 1.0f / TERRAIN_SIZE;
+	*nz = (up - down) / (2.0f * dz);
 }
 
 static void terrainGenerateVertices(t_world * world, float vertices[], int gridX, int gridY) {
-	t_vec3f normal;
 	int x, y;
+	float nx, nz;
 	int i = 0;
 
 	for (x = 0 ; x < TERRAIN_DETAIL ; x++) {
@@ -38,14 +39,13 @@ static void terrainGenerateVertices(t_world * world, float vertices[], int gridX
 			float wy = biom->heightGen(world, biom, wx, wz);
 			int textureID = biom->colorGen(world, biom, wx, wy, wz);
 
-			terrainCalculateNormal(world, biom, &normal, wx, wz);
+			terrainCalculateNormal(world, biom, &nx, &nz, wx, wz);
 
 			*(vertices + i++) = wy;
 
 			//generate normal
-			*(vertices + i++) = normal.x;
-			*(vertices + i++) = normal.y;
-			*(vertices + i++) = normal.z;
+			*(vertices + i++) = nx;
+			*(vertices + i++) = nz;
 
 			//generate texture id
 			*((int*)(vertices + i++)) = textureID;

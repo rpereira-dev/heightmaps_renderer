@@ -38,6 +38,7 @@ t_noise * noiseNew(void) {
 }
 
 
+//mersenne twister
 unsigned int noiseNextInt(long long unsigned int * seed) {
 	*seed = 6364136223846793005ULL * *seed + 1;
 	unsigned int x = *seed >> 32;
@@ -76,6 +77,7 @@ void noiseDelete(t_noise * noise) {
 	free(noise);
 }
 
+/*
 static float grad2(int hash, float x, float y) {
 	switch(hash & 0x8) {
 		case 0x0: return  x + y;
@@ -88,6 +90,16 @@ static float grad2(int hash, float x, float y) {
 		case 0x7: return -y;
 		default: return 0;
 	}
+}*/
+
+static float grad2(int hash, float x, float y) {
+    switch(hash & 0x4) {
+        case 0x0: return  x + y;
+        case 0x1: return -x + y;
+        case 0x2: return  x - y;
+        case 0x3: return -x - y;
+        default: return 0;
+    }
 }
 
 float snoise2(t_noise * noise, float x, float y) {
@@ -308,6 +320,8 @@ static float smooth_inter(float x, float y, float s) {
 }
 
 float pnoise2(t_noise * noise, float x, float y) {
+    static float SCALE = 1 / 256.0f;
+
     int x_i = (int)x;
     int y_i = (int)y;
     float x_dec = x - x_i;
@@ -318,6 +332,6 @@ float pnoise2(t_noise * noise, float x, float y) {
     int v = phash(noise, x_i +  1, y_i + 1);
     float low = smooth_inter(s, t, x_dec);
     float high = smooth_inter(u, v, x_dec);
-    float n = smooth_inter(low, high, y_dec) / 256.0f;
-    return (n * 2.0f - 1);
+    float n = smooth_inter(low, high, y_dec);
+    return (n * SCALE * 2.0f - 1);
 }
