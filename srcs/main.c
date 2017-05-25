@@ -10,7 +10,7 @@ void printUsage(char * binary, FILE * dst) {
 	fprintf(dst, "\t./%s -r 42 -h 256\n", binary);
 	fprintf(dst, "\t./%s -t \"texture.bmp\" -h 12\n", binary);
 }
-/*
+
 static int threadLoop(void * e) {
 	t_env 			* env 		= (t_env *) e;
 	t_glh_context 	* context 	= env->context;
@@ -35,7 +35,7 @@ static int threadLoop(void * e) {
 	printf("Thread loop stopped!\n");
 
 	return (0);
-}*/
+}
 
 int main(int argc, char **argv) {
 
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 	t_world * world 		= &(env.world);
 	t_renderer * renderer 	= &(env.renderer);
 	t_camera * camera 		= &(env.camera);
-    //thrd_t * thrd 			= &(env.thrd);
+    thrd_t * thrd 			= &(env.thrd);
 
 	printf("Initializing camera...\n");
 	cameraInit(camera);
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 	worldInit(world, bmpfile, maxheight);
 
 	printf("Creating calculator thread...\n");
-  	//thrd_create(thrd, threadLoop, &env);
+  	thrd_create(thrd, threadLoop, &env);
 
 	printf("Rendering started...\n");
 
@@ -123,6 +123,8 @@ int main(int argc, char **argv) {
 
     while (!glhWindowShouldClose(context->window) && env.is_running) {
 
+    	long t1;
+    	MICROSEC(t1);
 
     	//update the window
     	glhWindowUpdate(context->window);
@@ -134,7 +136,7 @@ int main(int argc, char **argv) {
  	    cameraUpdate(context, world, renderer, camera);
 
  	    //world
- 	    worldUpdate(context, world, renderer, camera);
+ 	    //worldUpdate(context, world, renderer, camera);
 
     	//update the renderer
     	rendererUpdate(context, world, renderer, camera);
@@ -143,7 +145,8 @@ int main(int argc, char **argv) {
     	rendererRender(context, world, renderer, camera);
 
     	//glhCheckError("post rendererUpdate()");
-
+    	long t2;
+    	MICROSEC(t2);
     	total += (t2 - t1);
     	count++;
 
@@ -155,7 +158,7 @@ int main(int argc, char **argv) {
 
     //wait for calculator thread to finish
     printf("Waiting for thread to finish...\n");
-   // thrd_join(env.thrd, NULL);
+    thrd_join(env.thrd, NULL);
 
 	printf("Loop ended\n");
 
