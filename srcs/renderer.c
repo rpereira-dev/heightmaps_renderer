@@ -168,8 +168,6 @@ static void rendererInitTerrain(t_renderer * renderer, t_terrain * terrain) {
 	glhVAOUnbind();
 }
 
-int i = 0;
-
 void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
 	(void)context;
 	//clear lists
@@ -191,10 +189,10 @@ void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * rende
 		} else {
 
 			float distance = vec3f_length(&diff);
-			float normalizer = 1 / distance;
-			diff.x *= normalizer;
-			diff.z *= normalizer;
 			if (distance < TERRAIN_RENDER_DISTANCE) {
+				//float normalizer = 1 / distance;
+				//diff.x *= normalizer;
+				//diff.z *= normalizer;
 				//float dot = vec3f_dot_product(&(camera->vview), &diff);
 				//float angle = acos_f(dot);
 				//if (distance <= 2 || angle < camera->fov + 0.01f) {
@@ -214,7 +212,6 @@ void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * rende
 	ARRAY_LIST_ITER_END(renderer->delete_list, t_terrain **, terrain_ptr, i);
 
 	array_list_clear(renderer->delete_list);
-
 }
 
 void rendererRender(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
@@ -251,6 +248,7 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	}
 
 	int vertexCount = (TERRAIN_DETAIL - 1) * (TERRAIN_DETAIL - 1) * 6;
+	renderer->vertexCount = 0;
 
 	//for every terrain which has to be rendered
 	ARRAY_LIST_ITER_START(renderer->render_list, t_terrain **, terrain_ptr, i) {
@@ -289,6 +287,8 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 
 		//draw it
 		glhDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_SHORT, NULL);
+		renderer->vertexCount += vertexCount;
+		
 	}
 	ARRAY_LIST_ITER_END(renderer->render_list, t_terrain *, terrain, i);
 

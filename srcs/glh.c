@@ -305,14 +305,12 @@ GLuint glhShaderLoad(char * filepath, GLenum type) {
 	//read file to string
 	int fd = open(filepath, O_RDONLY);
 	if (fd < 0) {
-		puts("a");
 		return (-1);
 	}
 
 	static int buffsize = 4096;
 	char * source = (char*)malloc(sizeof(char) * buffsize);
 	if (source == NULL) {
-		puts("b");
 		return (-1);
 	}
 

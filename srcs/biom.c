@@ -28,6 +28,29 @@ static int biomMountainGenColor(t_world * world, t_biom * biom, float wx, float 
 	}
 }
 
+static int biomMountainGenColorHigh(t_world * world, t_biom * biom, float wx, float wy, float wz) {
+	return (biomMountainGenColor(world, biom, wx, wy * 1.5f, wz));
+}
+
+static int biomMountainGenColorLow(t_world * world, t_biom * biom, float wx, float wy, float wz) {
+	return (biomMountainGenColor(world, biom, wx, wy * 0.5f, wz));
+}
+
+static float normalizeHeight(t_world * world, float heightFactor) {
+	    heightFactor += 1;
+    heightFactor *= 0.5f;
+
+    float minHeight = 0.08f;
+    float maxHeight = 1.0f;
+    if (heightFactor < minHeight) {
+    	heightFactor = minHeight;
+    } else if (heightFactor > maxHeight) {
+    	heightFactor = maxHeight;
+    }
+    return (world->max_height * heightFactor);
+}
+
+/** the height generator function for moutains */
 static float biomMountainGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
 	(void)biom;
 /*
@@ -43,27 +66,14 @@ static float biomMountainGenHeight(t_world * world, t_biom * biom, float wx, flo
 
 	float heightFactor = 0.0f;
 
-    float layerF = 0.04f;
-    float weight = 1.0f;
-    for (int i = 0 ; i < 5 ; i++)
-    {
-        heightFactor += pnoise2(world->octaves[i], wx * layerF, wz * layerF) * weight;
-        layerF *= 2.0f;
-        weight *= 0.5f;
+    float frequency = 0.03f;
+    float amplitude = 1.0f;
+    for (int i = 0 ; i < 4 ; i++) {
+        heightFactor += pnoise2(world->octaves[i], wx * frequency, wz * frequency) * amplitude;
+        frequency *= 2.5f;
+        amplitude *= 0.5f;
     }
-
-    heightFactor += 1;
-    heightFactor *= 0.5f;
-
-    float minHeight = 0.08f;
-    float maxHeight = 1.0f;
-    if (heightFactor < minHeight) {
-    	heightFactor = minHeight;
-    } else if (heightFactor > maxHeight) {
-    	heightFactor = maxHeight;
-    }
-
-	return (world->max_height * heightFactor);
+    return (normalizeHeight(world, heightFactor));
 }
 
 static float biomHeightmapGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
@@ -114,6 +124,8 @@ void biomsInit(t_world * world) {
 	if (world->heightmap == NULL) {
 		printf("No heightmaps set, generating terrain procedurally\n");
 		biomRegister(world, biomMountainGenHeight, TERRAIN_UNIT / 16.0f, biomMountainGenColor, biomCanGenerate);
+		biomRegister(world, biomMountainGenHeight, TERRAIN_UNIT / 16.0f, biomMountainGenColorHigh, biomCanGenerate);
+		biomRegister(world, biomMountainGenHeight, TERRAIN_UNIT / 16.0f, biomMountainGenColorLow, biomCanGenerate);
 	} else {
 		printf("Heightmap in use\n");
 		biomRegister(world, biomHeightmapGenHeight, TERRAIN_UNIT, biomMountainGenColor, biomHeightmapCanGenerate);

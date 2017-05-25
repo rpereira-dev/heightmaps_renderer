@@ -35,7 +35,7 @@ typedef struct	s_camera {
 # define TERRAIN_DETAIL (16)
 //terrain width (and height)
 # define TERRAIN_SIZE (16)
-# define TERRAIN_UNIT (TERRAIN_SIZE / TERRAIN_DETAIL)
+# define TERRAIN_UNIT (TERRAIN_SIZE / (float)TERRAIN_DETAIL)
 // number of terrain to render in term of distance
 # define TERRAIN_RENDER_DISTANCE (32)
 // distance where terrain are kept loaded in memory
@@ -102,6 +102,7 @@ typedef struct 	s_renderer {
 	t_array_list 	* delete_list; //the list of terrain to delete
 	int 			state; //the state for rendering
 	t_texture 		texture;
+	int 			vertexCount; //number of vertices drawn on last frame
 }				t_renderer;
 
 typedef struct 	s_env {

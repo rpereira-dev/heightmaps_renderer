@@ -66,7 +66,9 @@ void worldDelete(t_world * world) {
 t_biom * worldGetBiomAt(t_world * world, float wx, float wz) {
 	(void)wx;
 	(void)wz;
-	return (array_list_get(world->bioms, 0));
+	float noise = (snoise2(world->octaves[0], wx * 0.002f, wz * 0.002f) + 1.0f) * 0.5f;
+	int id = (int) (noise * world->bioms->size);
+	return (array_list_get(world->bioms, id));
 }
 
 void worldGetGridIndex(t_world * world, float worldX, float worldZ, int * gridX, int * gridY) {
