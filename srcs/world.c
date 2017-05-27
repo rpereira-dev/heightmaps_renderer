@@ -95,8 +95,8 @@ t_terrain * worldGetTerrain(t_world * world, int gridX, int gridY) {
 
 static void worldLoadNewTerrains(t_world * world, t_camera * camera) {
 
-	int indexx = camera->terrain_index.x - TERRAIN_LOADED_DISTANCE;
-	int indexy = camera->terrain_index.y - TERRAIN_LOADED_DISTANCE;
+	int indexx = MAX(0, camera->terrain_index.x - TERRAIN_LOADED_DISTANCE);
+	int indexy = MAX(0, camera->terrain_index.y - TERRAIN_LOADED_DISTANCE);
 	int maxx = camera->terrain_index.x + TERRAIN_LOADED_DISTANCE;
 	int maxy = camera->terrain_index.y + TERRAIN_LOADED_DISTANCE;
 	int gridX, gridY;
@@ -106,7 +106,6 @@ static void worldLoadNewTerrains(t_world * world, t_camera * camera) {
 			if (gridX < 0 || gridY < 0) {
 				continue ;
 			}
-
 
 			//if this terrain isnt generated yet
 			if (worldGetTerrain(world, gridX, gridY) == NULL) {

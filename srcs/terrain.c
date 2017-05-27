@@ -10,18 +10,8 @@ static void terrainCalculateNormal(t_world * world, t_biom * biom, float * nx, f
 	float down	= biom->heightGen(world, biom, wx, wz - dz);
 	float up	= biom->heightGen(world, biom, wx, wz + dz);
 
-	//vec3f_set((normal, left - right) / 2.0f, 1.0f, (down - up) / 2.0f);
-
-	/*
-		F(x, y, z) = h(x, z) - y = 0
-		grad(F(x, y, z)) = (dh/dx, -1, dh/dz);
-
-		dh/dx = (h(x + 1, z) - h(x - 1, z)) / 2.0f
-		dh/dz = (h(x, z + 1) - h(x, z - 1)) / 2.0f
-	*/
-
 	*nx = (right - left) / (2.0f * dx);
-	//*ny = 1.0f / TERRAIN_SIZE;
+	//*ny = 1.0f;
 	*nz = (up - down) / (2.0f * dz);
 }
 

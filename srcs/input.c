@@ -5,6 +5,55 @@ static void inputKey(GLFWwindow * winptr, int key, int scancode, int action, int
 	(void)scancode;
 	(void)mods;
 
+	t_world * world = &(getEnv()->world);
+	t_renderer * renderer = &(getEnv()->renderer);
+	t_camera * camera = &(getEnv()->camera);
+
+		//reset terrain
+	if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+		
+		int i;
+		long long unsigned int seed = time(NULL);
+		for (i = 0 ; i < WORLD_OCTAVES ; i++) {
+			noiseNextInt(&seed);
+			noiseSeed(world->octaves[i], seed);
+		}
+
+		HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
+			terrainGenerate(world, terrain);
+		}
+		HMAP_ITER_END(world->terrains, t_terrain *, terrain);
+	}
+
+
+	//triangles
+	if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+		renderer->state ^= STATE_RENDER_TRIANGLES;
+	}
+
+	//fog
+	if (key == GLFW_KEY_V && action == GLFW_PRESS) {
+		renderer->state ^= STATE_APPLY_FOG;
+	}
+
+	//lighting
+	if (key == GLFW_KEY_B && action == GLFW_PRESS) {
+		renderer->state ^= STATE_APPLY_PHONG_LIGHTNING;
+	}
+
+	//culling
+	if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+		renderer->state ^= STATE_CULLING;
+	}
+
+	//sun
+	if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+		renderer->sunray.x = camera->vview.x;
+		renderer->sunray.y = -camera->vview.y;
+		renderer->sunray.z = camera->vview.z;
+	}
+
+	//close
 	if (key == GLFW_KEY_ESCAPE) {
 		glfwSetWindowShouldClose(winptr, 1);
 	} else if (key == GLFW_KEY_N && action == GLFW_PRESS) {
@@ -104,7 +153,7 @@ static void inputUpdateDebug(t_glh_context * context, t_world * world, t_rendere
 static void inputUpdateCamera(t_camera * camera) {
 
 	float movespeed = camera->movespeed;
-	static float rotspeed = 1.0f;
+	static float rotspeed = 0.3f;
 
 	t_glh_window * win = glhGetWindow();
 
@@ -112,14 +161,17 @@ static void inputUpdateCamera(t_camera * camera) {
 		return ;
 	}
 
+
+	//camera speed
 	if (glfwGetKey(win->pointer, GLFW_KEY_KP_ADD) == GLFW_PRESS) {
-		camera->movespeed *= 2.0f;
+		camera->movespeed *= 1.2f;
 	} else if (glfwGetKey(win->pointer, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS) {
-		camera->movespeed *= 0.5f;
+		camera->movespeed *= 0.833f;
 	}
+
 	//rotation
-	camera->rot.pitch += ((win->mouseY - win->prev_mouseY) * 0.3f * rotspeed);
-	camera->rot.yaw += ((win->mouseX - win->prev_mouseX) * 0.3f * rotspeed);
+	camera->rot.pitch += ((win->mouseY - win->prev_mouseY) * rotspeed);
+	camera->rot.yaw += ((win->mouseX - win->prev_mouseX) * rotspeed);
 
 	//move
 	if (glfwGetKey(win->pointer, GLFW_KEY_W) == GLFW_PRESS) {
@@ -142,40 +194,9 @@ static void inputUpdateCamera(t_camera * camera) {
 	}
 }
 
-static void inputUpdateWorld(t_glh_window * win, t_world * world) {
-	if (glfwGetKey(win->pointer, GLFW_KEY_P) == GLFW_PRESS) {
-		
-		int i;
-		long long unsigned int seed = time(NULL);
-		for (i = 0 ; i < WORLD_OCTAVES ; i++) {
-			noiseNextInt(&seed);
-			noiseSeed(world->octaves[i], seed);
-		}
-
-		HMAP_ITER_START(world->terrains, t_terrain *, terrain) {
-			terrainGenerate(world, terrain);
-		}
-		HMAP_ITER_END(world->terrains, t_terrain *, terrain);
-	}
-}
-
-static void inputUpdateRenderer(t_glh_window * win, t_renderer * renderer) {
-	renderer->state = 0;
-	
-	if (glfwGetKey(win->pointer, GLFW_KEY_V) == GLFW_PRESS) {
-		renderer->state = renderer->state | STATE_APPLY_FOG;
-	}
-
-	if (glfwGetKey(win->pointer, GLFW_KEY_B) == GLFW_PRESS) {
-		renderer->state = renderer->state | STATE_APPLY_PHONG_LIGHTNING;
-	}
-}
-
 void inputUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
 	inputUpdateCamera(camera);
 	inputUpdateDebug(context, world, renderer, camera);
-	inputUpdateWorld(context->window, world);
-	inputUpdateRenderer(context->window, renderer);
 }
 
 void inputInit(t_glh_context * context) {

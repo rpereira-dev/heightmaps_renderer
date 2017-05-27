@@ -28,16 +28,8 @@ static int biomMountainGenColor(t_world * world, t_biom * biom, float wx, float 
 	}
 }
 
-static int biomMountainGenColorHigh(t_world * world, t_biom * biom, float wx, float wy, float wz) {
-	return (biomMountainGenColor(world, biom, wx, wy * 1.5f, wz));
-}
-
-static int biomMountainGenColorLow(t_world * world, t_biom * biom, float wx, float wy, float wz) {
-	return (biomMountainGenColor(world, biom, wx, wy * 0.5f, wz));
-}
-
 static float normalizeHeight(t_world * world, float heightFactor) {
-	    heightFactor += 1;
+	heightFactor += 1;
     heightFactor *= 0.5f;
 
     float minHeight = 0.08f;
@@ -51,45 +43,30 @@ static float normalizeHeight(t_world * world, float heightFactor) {
 }
 
 /** the height generator function for moutains */
-static float biomMountainGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
-	(void)biom;
-/*
-	float f = world->max_height;
-	float d1 = 0.005f;
-	float d2 = 0.01f;
-	float height = 0;
-	height += noise2(world->octaves[0], wx  * d1, wz * d1) * f;
-	height += noise2(world->octaves[1], wx  * d2, wz * d2) * f / 16.0f;
-	height = clamp(height, -f, f);
-*/
-
+static float biomGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
 
 	float heightFactor = 0.0f;
 
-    float frequency = 0.03f;
-    float amplitude = 1.0f;
-    for (int i = 0 ; i < 4 ; i++) {
+    float frequency = biom->frequency;
+    float amplitude = biom->amplitude;
+    for (int i = 0 ; i < biom->octaves ; i++) {
         heightFactor += pnoise2(world->octaves[i], wx * frequency, wz * frequency) * amplitude;
-        frequency *= 2.5f;
-        amplitude *= 0.5f;
+        frequency *= biom->lacunarity;
+        amplitude *= biom->persistance;
     }
     return (normalizeHeight(world, heightFactor));
 }
 
 static float biomHeightmapGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
 	(void)biom;
-
-	float f = world->max_height;
 	int px = (int)(wx / TERRAIN_UNIT);
 	int py = (int)(wz / TERRAIN_UNIT);
 	px = clamp(px, 0, world->heightmap->w - 1);
 	py = clamp(py, 0, world->heightmap->h - 1);
 
 	int rgb = heightmapGetHeight(world->heightmap, px, py);
-	float height = rgb / (255.0f * 3.0f) * f;
-	height = clamp(height, -f, f);
-
-	return (height);
+	float height = rgb / (255.0f * 3.0f);
+	return (clamp(height, 0, height * world->max_height));
 }
 
 static int biomHeightmapCanGenerate(t_world * world, t_biom * biom, float wx, float wz) {
@@ -109,26 +86,32 @@ static int biomCanGenerate(t_world * world, t_biom * biom, float wx, float wz) {
 
 static void biomRegister(t_world * world,
 							float (*heightGen)(t_world *, struct s_biom *, float, float),
-							float heightGenStep,
 							int (*colorGen)(t_world *, struct s_biom *, float, float, float),
-							int (*canGen)(t_world *, struct s_biom *, float, float)) {
+							int (*canGen)(t_world *, struct s_biom *, float, float),
+							float heightGenStep, int octaves,
+							float amplitude, float persistance,
+							float frequency, float lacunarity) {
 	t_biom biom;
 	biom.heightGen = heightGen;
-	biom.heightGenStep = heightGenStep;
 	biom.colorGen = colorGen;
 	biom.canGenerateAt = canGen;
+	biom.heightGenStep = heightGenStep;
+	biom.octaves = octaves;
+	biom.amplitude = amplitude;
+	biom.frequency = frequency;
+	biom.persistance = persistance;
+	biom.lacunarity = lacunarity;
 	array_list_add(world->bioms, &biom);
 }
 
 void biomsInit(t_world * world) {
 	if (world->heightmap == NULL) {
 		printf("No heightmaps set, generating terrain procedurally\n");
-		biomRegister(world, biomMountainGenHeight, TERRAIN_UNIT / 16.0f, biomMountainGenColor, biomCanGenerate);
-		biomRegister(world, biomMountainGenHeight, TERRAIN_UNIT / 16.0f, biomMountainGenColorHigh, biomCanGenerate);
-		biomRegister(world, biomMountainGenHeight, TERRAIN_UNIT / 16.0f, biomMountainGenColorLow, biomCanGenerate);
+		float step = TERRAIN_UNIT / 16.0f;
+		biomRegister(world, biomGenHeight, biomMountainGenColor, biomCanGenerate, step, 4, 1.0f, 0.5f, 0.03f, 2.0f);
 	} else {
 		printf("Heightmap in use\n");
-		biomRegister(world, biomHeightmapGenHeight, TERRAIN_UNIT, biomMountainGenColor, biomHeightmapCanGenerate);
+		biomRegister(world, biomHeightmapGenHeight, biomMountainGenColor, biomHeightmapCanGenerate, TERRAIN_UNIT, 0, 0, 0, 0, 0);
 	}
 }
 

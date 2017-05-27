@@ -5,6 +5,7 @@ GLuint u_transf_matrix;
 GLuint u_sky_color;
 GLuint u_state;
 GLuint u_time;
+GLuint u_sunpos;
 
 static void rendererBindAttributes(t_glh_program * program) {
 	glhProgramBindAttribute(program, 0, "pos");
@@ -20,6 +21,7 @@ static void rendererLinkUniforms(t_glh_program * program) {
 	u_sky_color = glhProgramGetUniform(program, "sky_color");
 	u_state = glhProgramGetUniform(program, "state");
 	u_time = glhProgramGetUniform(program, "time");
+	u_sunpos = glhProgramGetUniform(program, "sunray");
 }
 
 static void rendererGenerateBufferIndices(t_renderer * renderer) {
@@ -86,6 +88,9 @@ static void rendererGenerateBuffers(t_renderer * renderer) {
 
 void rendererInit(t_renderer * renderer) {
 
+	//init math lib
+	cmaths_init();
+
 	//create the program
 	renderer->program = glhProgramNew();
 
@@ -123,6 +128,10 @@ void rendererInit(t_renderer * renderer) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
+
+	//set default sun ray
+	vec3f_set(&(renderer->sunray), 1.0f, 1.0f, 1.0f);
+	vec3f_normalize(&(renderer->sunray), &(renderer->sunray));
 
 	//swap interval for 60 fps max
 	glfwSwapInterval(1);
@@ -170,6 +179,12 @@ static void rendererInitTerrain(t_renderer * renderer, t_terrain * terrain) {
 
 void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
 	(void)context;
+
+	//if rendering list is locked
+	if (renderer->state & STATE_CULLING) {
+		return ;
+	}
+
 	//clear lists
 	array_list_clear(renderer->render_list);
 	array_list_clear(renderer->delete_list);
@@ -190,7 +205,14 @@ void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * rende
 
 			float distance = vec3f_length(&diff);
 			if (distance < TERRAIN_RENDER_DISTANCE) {
-				array_list_add(renderer->render_list, &terrain);
+				float normalizer = 1 / distance;
+				diff.x *= normalizer;
+				diff.z *= normalizer;
+
+				float dot = vec3f_dot_product(&(camera->vview), &diff);
+				if (distance <= 2 || acos_f(dot) < camera->fov) {
+					array_list_add(renderer->render_list, &terrain);
+				}
 			}
 		}
 	}
@@ -207,18 +229,47 @@ void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * rende
 	array_list_clear(renderer->delete_list);
 }
 
-void rendererRender(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
+static int rendererRenderTerrain(t_renderer * renderer, t_terrain * terrain) {
+	static int vertexCount = (TERRAIN_DETAIL - 1) * (TERRAIN_DETAIL - 1) * 6;
 
-	//viewport
-	glhViewPort(0, 0, context->window->width, context->window->height);
+	//if it vertices arent up to date
+	if (terrain->vertices != NULL) {
+		//update them
+		glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
+		glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_VERTEX_SIZE, terrain->vertices, GL_STATIC_DRAW);
+		//release data
+		free(terrain->vertices);
+		terrain->vertices = NULL;
+		glhVBOUnbind(GL_ARRAY_BUFFER);
+	}
+
+	//generate the transformation matrix for this terrain
+	t_mat4f mat;
+	mat4f_identity(&mat);
+	mat4f_translate(&mat, &mat, terrain->index.x * TERRAIN_SIZE, 0, terrain->index.y * TERRAIN_SIZE);
+	mat4f_scale(&mat, &mat, TERRAIN_SIZE);
+
+	//load the matrix as a uniform variable
+	glhProgramLoadUniformMatrix4f(u_transf_matrix, (float*)(&mat));
+
+	//sun light
+	glhProgramLoadUniformVec3f(u_sunpos, renderer->sunray.x, renderer->sunray.y, renderer->sunray.z);
+
+	//bind the model
+	glhVAOBind(terrain->vao);
+
+	//draw it
+	glhDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_SHORT, NULL);
+
+	return (vertexCount);
+}
+
+static void rendererPrepareProgram(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
+	(void)context;
 
 	//set the texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, renderer->texture.txID);
-
-    //clear color buffer
-    glhClearColor(0.46f, 0.70f, 0.99f, 1.0f);
-    glhClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//bind the program
 	glhProgramUse(renderer->program);
@@ -234,57 +285,46 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 	glhProgramLoadUniformInt(u_time, world->time);
 
 	//debug
-	if (glfwGetKey(context->window->pointer, GLFW_KEY_F) == GLFW_PRESS) {
+	if (renderer->state & STATE_RENDER_TRIANGLES) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	} else {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
+}
 
-	//vertex per terrain
-	int vertexCount = (TERRAIN_DETAIL - 1) * (TERRAIN_DETAIL - 1) * 6;
+void rendererRender(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
+
+	//viewport
+	glhViewPort(0, 0, context->window->width, context->window->height);
+
+    //clear color buffer
+    glhClearColor(0.46f, 0.70f, 0.99f, 1.0f);
+    glhClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //prepare the renderer (bind program, textures and uniforms)
+    rendererPrepareProgram(context, world, renderer, camera);
 
 	//total vertex drawn
 	renderer->vertexCount = 0;
+
+	//new terrains counter
+	int newCount = 0;
 
 	//for every terrain which has to be rendered
 	ARRAY_LIST_ITER_START(renderer->render_list, t_terrain **, terrain_ptr, i) {
 
 		//get the terrain
 		t_terrain * terrain = *terrain_ptr;
-
+		
 		//if it is not initialized
-		if (!terrain->initialized) {
-			//initialized it
+		if (!terrain->initialized && ++newCount < MAX_NEW_TERRAINS_PER_FRAME) {
+			//initialize it
 			rendererInitTerrain(renderer, terrain);
 		}
 
-		//if it vertices arent up to date
-		if (terrain->vertices != NULL) {
-			//update them
-			glhVBOBind(GL_ARRAY_BUFFER, terrain->vbo);
-			glhVBOData(GL_ARRAY_BUFFER, TERRAIN_DETAIL * TERRAIN_DETAIL * TERRAIN_VERTEX_SIZE, terrain->vertices, GL_STATIC_DRAW);
-			//release data
-			free(terrain->vertices);
-			terrain->vertices = NULL;
-			glhVBOUnbind(GL_ARRAY_BUFFER);
+		if (terrain->initialized) {
+			renderer->vertexCount += rendererRenderTerrain(renderer, terrain);
 		}
-
-		//generate the transformation matrix for this terrain
-		t_mat4f mat;
-		mat4f_identity(&mat);
-		mat4f_translate(&mat, &mat, terrain->index.x * TERRAIN_SIZE, 0, terrain->index.y * TERRAIN_SIZE);
-		mat4f_scale(&mat, &mat, TERRAIN_SIZE);
-
-		//load the matrix as a uniform variable
-		glhProgramLoadUniformMatrix4f(u_transf_matrix, (float*)(&mat));
-
-		//bind the model
-		glhVAOBind(terrain->vao);
-
-		//draw it
-		glhDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_SHORT, NULL);
-		renderer->vertexCount += vertexCount;
-		
 	}
 	ARRAY_LIST_ITER_END(renderer->render_list, t_terrain *, terrain, i);
 
@@ -294,11 +334,11 @@ void rendererRender(t_glh_context * context, t_world * world, t_renderer * rende
 
 
 void rendererDelete(t_renderer * renderer) {
+	cmaths_deinit();
 	glhProgramDelete(renderer->program);
 	glhVBODelete(renderer->terrain_indices);
 	glhVBODelete(renderer->terrain_vertices);
 	array_list_delete(renderer->render_list);
-	array_list_delete(renderer->delete_list);
 	free(renderer->render_list);
 	imageDelete(renderer->texture.image);
 	glhDeleteTexture(renderer->texture.txID);

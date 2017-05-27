@@ -38,8 +38,10 @@ typedef struct	s_camera {
 # define TERRAIN_UNIT (TERRAIN_SIZE / (float)TERRAIN_DETAIL)
 // number of terrain to render in term of distance
 # define TERRAIN_RENDER_DISTANCE (64)
+//max number of terrains to be newly pushed to GPU per frames
+# define MAX_NEW_TERRAINS_PER_FRAME (32)
 // distance where terrain are kept loaded in memory
-# define TERRAIN_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE + 8)
+# define TERRAIN_LOADED_DISTANCE (TERRAIN_RENDER_DISTANCE)
 // distance where terrain are kept loaded in memory
 # define TERRAIN_KEEP_LOADED_DISTANCE (TERRAIN_LOADED_DISTANCE)
 # define MAX_NUMBER_OF_TERRAIN_LOADED (TERRAIN_KEEP_LOADED_DISTANCE * TERRAIN_KEEP_LOADED_DISTANCE * 2 * 2)
@@ -48,6 +50,8 @@ typedef struct	s_camera {
 
 # define STATE_APPLY_FOG (1)
 # define STATE_APPLY_PHONG_LIGHTNING (2)
+# define STATE_CULLING (4)
+# define STATE_RENDER_TRIANGLES (8)
 
 # define TX_WATER (0)
 # define TX_GRASS (1)
@@ -87,10 +91,15 @@ typedef struct 	s_world {
 }				t_world;
 
 typedef struct 	s_biom {
-	float (*heightGen)(t_world *, struct s_biom *, float, float);
-	float heightGenStep; //the heightgen function step
-	int (*colorGen)(t_world *, struct s_biom *, float, float, float);
-	int (*canGenerateAt)(t_world *, struct s_biom *, float, float);
+	float 	(*heightGen)(t_world *, struct s_biom *, float, float);
+	int 	(*colorGen)(t_world *, struct s_biom *, float, float, float);
+	int 	(*canGenerateAt)(t_world *, struct s_biom *, float, float);
+	float	heightGenStep;
+	int 	octaves;
+	float 	amplitude;
+	float 	persistance;
+	float 	frequency;
+	float 	lacunarity;
 }				t_biom;
 
 /** the renderer part of the program */
@@ -103,16 +112,22 @@ typedef struct 	s_renderer {
 	int 			state; //the state for rendering
 	t_texture 		texture;
 	int 			vertexCount; //number of vertices drawn on last frame
+	t_vec3f			sunray; //sun light vector
 }				t_renderer;
 
 typedef struct 	s_env {
 	t_glh_context 	* context;
 	t_world			world;
 	t_renderer		renderer;
-	t_camera		camera;
+	t_camera		camera; //user camera
 	thrd_t 			thrd;
 	int 			is_running;
 }				t_env;
+
+extern t_env g_env;
+
+//get env
+t_env * getEnv(void);
 
 //renderer related functions
 void rendererInit(t_renderer * renderer);

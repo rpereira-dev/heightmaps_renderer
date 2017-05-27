@@ -2,7 +2,6 @@
 
 # define BMP_HEADER_SIZE (54)
 
-
 t_image * imageNew(char const * path) {
 
 	int fd = open(path, O_RDONLY);
