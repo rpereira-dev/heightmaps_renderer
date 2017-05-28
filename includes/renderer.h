@@ -50,8 +50,9 @@ typedef struct	s_camera {
 
 # define STATE_APPLY_FOG (1)
 # define STATE_APPLY_PHONG_LIGHTNING (2)
-# define STATE_CULLING (4)
+# define STATE_LOCK_CULLING (4)
 # define STATE_RENDER_TRIANGLES (8)
+# define STATE_CULLING (16)
 
 # define TX_WATER (0)
 # define TX_GRASS (1)
@@ -72,6 +73,7 @@ typedef struct 	s_texture {
 /** a terrain */
 typedef struct 	s_terrain {
 	t_vec2i	index;
+	t_mat4f	mat;
 	GLuint 	vao;
 	GLuint 	vbo;
 	float 	* vertices;

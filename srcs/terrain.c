@@ -1,27 +1,18 @@
 #include "renderer.h"
 
-static void terrainCalculateNormal(t_world * world, t_biom * biom, float * nx, float * nz, float wx, float wz) {
-
+static void terrainCalculateNormal(t_world * world, t_biom * biom, float * nx, float * nz,
+									float wx, float wy, float wz) {
 	float dx = biom->heightGenStep;
 	float dz = biom->heightGenStep;
-
-	float left	= biom->heightGen(world, biom, wx - dx, wz);
-	float right	= biom->heightGen(world, biom, wx + dx, wz);
-	float down	= biom->heightGen(world, biom, wx, wz - dz);
-	float up	= biom->heightGen(world, biom, wx, wz + dz);
-
-	*nx = (right - left) / (2.0f * dx);
-	//*ny = 1.0f;
-	*nz = (up - down) / (2.0f * dz);
+	*nx = (biom->heightGen(world, biom, wx + dx, wz) - wy) / dx;
+	*nz = (biom->heightGen(world, biom, wx, wz + dz) - wy) / dz;
 }
 
 static void terrainGenerateVertices(t_world * world, float vertices[], int gridX, int gridY) {
-	int x, y;
 	float nx, nz;
 	int i = 0;
-
-	for (x = 0 ; x < TERRAIN_DETAIL ; x++) {
-		for (y = 0 ; y < TERRAIN_DETAIL; y++) {
+	for (int x = 0 ; x < TERRAIN_DETAIL ; x++) {
+		for (int y = 0 ; y < TERRAIN_DETAIL; y++) {
 
 			float wx = (gridX * (TERRAIN_DETAIL - 1) + x) * TERRAIN_UNIT;
 			float wz = (gridY * (TERRAIN_DETAIL - 1) + y) * TERRAIN_UNIT;
@@ -29,15 +20,11 @@ static void terrainGenerateVertices(t_world * world, float vertices[], int gridX
 			float wy = biom->heightGen(world, biom, wx, wz);
 			int textureID = biom->colorGen(world, biom, wx, wy, wz);
 
-			terrainCalculateNormal(world, biom, &nx, &nz, wx, wz);
+			terrainCalculateNormal(world, biom, &nx, &nz, wx, wy, wz);
 
 			*(vertices + i++) = wy;
-
-			//generate normal
 			*(vertices + i++) = nx;
 			*(vertices + i++) = nz;
-
-			//generate texture id
 			*((int*)(vertices + i++)) = textureID;
 		}
 	}
@@ -78,6 +65,11 @@ t_terrain * terrainNew(t_world * world, int gridX, int gridY) {
 	terrain->index.y = gridY;
 	terrain->vertices = NULL;
 	terrain->initialized = 0;
+
+	//generate the transformation matrix for this terrain
+	mat4f_identity(&(terrain->mat));
+	mat4f_translate(&(terrain->mat), &(terrain->mat), terrain->index.x * TERRAIN_SIZE, 0, terrain->index.y * TERRAIN_SIZE);
+	mat4f_scale(&(terrain->mat), &(terrain->mat), TERRAIN_SIZE);
 
 	terrainGenerate(world, terrain);
 

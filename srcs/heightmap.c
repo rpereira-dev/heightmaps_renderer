@@ -3,8 +3,8 @@
 
 int heightmapGetHeight(t_image * image, float x, float y) {
 	int px = (int)x;
-	int py = (int)y;
-	int idx = (px * image->h + py) * 3;
+	int py = image->h - (int)y;
+	int idx = (py * image->w + px) * 3;
 	if (idx >= image->w * image->h * 3) {
 		return (0);
 	}

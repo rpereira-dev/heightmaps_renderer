@@ -24,7 +24,7 @@ void main(void) {
   	//phong ligthing model
   	if ((state & STATE_APPLY_PHONG_LIGHTNING) != STATE_APPLY_PHONG_LIGHTNING) {
 	  	float n = dot(pass_normal, sunray);
-	  	float intensity = max(n, 0.3);
+	  	float intensity = max(n, 0.2);
 	  	diffuse *= intensity;
 	}
 

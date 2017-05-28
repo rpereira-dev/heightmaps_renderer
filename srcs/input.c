@@ -43,6 +43,11 @@ static void inputKey(GLFWwindow * winptr, int key, int scancode, int action, int
 
 	//culling
 	if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+		renderer->state ^= STATE_LOCK_CULLING;
+	}
+
+	//culling
+	if (key == GLFW_KEY_X && action == GLFW_PRESS) {
 		renderer->state ^= STATE_CULLING;
 	}
 

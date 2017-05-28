@@ -133,6 +133,9 @@ void rendererInit(t_renderer * renderer) {
 	vec3f_set(&(renderer->sunray), 1.0f, 1.0f, 1.0f);
 	vec3f_normalize(&(renderer->sunray), &(renderer->sunray));
 
+	//line width
+	glLineWidth(2.0f);
+
 	//swap interval for 60 fps max
 	glfwSwapInterval(1);
 
@@ -181,7 +184,7 @@ void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * rende
 	(void)context;
 
 	//if rendering list is locked
-	if (renderer->state & STATE_CULLING) {
+	if (renderer->state & STATE_LOCK_CULLING) {
 		return ;
 	}
 
@@ -210,7 +213,7 @@ void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * rende
 				diff.z *= normalizer;
 
 				float dot = vec3f_dot_product(&(camera->vview), &diff);
-				if (distance <= 2 || acos_f(dot) < camera->fov) {
+				if (distance <= 2 || acos_f(dot) < camera->fov || renderer->state & STATE_CULLING) {
 					array_list_add(renderer->render_list, &terrain);
 				}
 			}
@@ -243,14 +246,8 @@ static int rendererRenderTerrain(t_renderer * renderer, t_terrain * terrain) {
 		glhVBOUnbind(GL_ARRAY_BUFFER);
 	}
 
-	//generate the transformation matrix for this terrain
-	t_mat4f mat;
-	mat4f_identity(&mat);
-	mat4f_translate(&mat, &mat, terrain->index.x * TERRAIN_SIZE, 0, terrain->index.y * TERRAIN_SIZE);
-	mat4f_scale(&mat, &mat, TERRAIN_SIZE);
-
 	//load the matrix as a uniform variable
-	glhProgramLoadUniformMatrix4f(u_transf_matrix, (float*)(&mat));
+	glhProgramLoadUniformMatrix4f(u_transf_matrix, (float*)(&(terrain->mat)));
 
 	//sun light
 	glhProgramLoadUniformVec3f(u_sunpos, renderer->sunray.x, renderer->sunray.y, renderer->sunray.z);
