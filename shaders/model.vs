@@ -10,15 +10,14 @@ out float     visibility;
 out vec3      pass_normal;
 out vec2      pass_uv;
 flat out int  pass_textureID;
+out vec3      viewVec;
 
 //view and projection matrix
 uniform mat4 mvp_matrix;
 
 //transformation matrix
 uniform mat4 transf_matrix;
-
 uniform int state;
-
 uniform int time;
 
 # define TERRAIN_SIZE (16.0)
@@ -29,7 +28,9 @@ uniform int time;
 # define STATE_APPLY_PHONG_LIGHTNING (2)
 
 void main(void) {
+
     vec4 world_pos = transf_matrix * vec4(pos.x, height, pos.y, 1.0);
+    viewVec = normalize(-world_pos.xyz);
   	gl_Position = mvp_matrix * world_pos;
 
   	//fog calculation

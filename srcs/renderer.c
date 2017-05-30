@@ -181,8 +181,6 @@ static void rendererInitTerrain(t_renderer * renderer, t_terrain * terrain) {
 }
 
 void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
-	(void)context;
-
 	//if rendering list is locked
 	if (renderer->state & STATE_LOCK_CULLING) {
 		return ;
@@ -262,8 +260,6 @@ static int rendererRenderTerrain(t_renderer * renderer, t_terrain * terrain) {
 }
 
 static void rendererPrepareProgram(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
-	(void)context;
-
 	//set the texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, renderer->texture.txID);

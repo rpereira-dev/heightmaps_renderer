@@ -11,7 +11,6 @@ void cameraInit(t_camera * camera) {
 }
 
 void cameraDelete(t_camera * camera) {
-	(void)camera;
 }
 
 static void cameraUpdateMatrices(t_camera * camera) {
@@ -48,14 +47,8 @@ static void cameraUpdateMatrices(t_camera * camera) {
 }
 
 void cameraUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
-	(void)context;
-	(void)world;
-	(void)renderer;
-	(void)camera;
-
 	//update camera matrices
 	cameraUpdateMatrices(camera);
-
 	//update camera world index
 	worldGetGridIndex(world, camera->pos.x, camera->pos.z, &(camera->terrain_index.x), &(camera->terrain_index.y));
 }

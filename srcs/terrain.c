@@ -68,7 +68,7 @@ t_terrain * terrainNew(t_world * world, int gridX, int gridY) {
 
 	//generate the transformation matrix for this terrain
 	mat4f_identity(&(terrain->mat));
-	mat4f_translate(&(terrain->mat), &(terrain->mat), terrain->index.x * TERRAIN_SIZE, 0, terrain->index.y * TERRAIN_SIZE);
+	mat4f_translate(&(terrain->mat), &(terrain->mat), terrain->index.x * TERRAIN_SIZE * 1.1, 0, terrain->index.y * TERRAIN_SIZE * 1.1);
 	mat4f_scale(&(terrain->mat), &(terrain->mat), TERRAIN_SIZE);
 
 	terrainGenerate(world, terrain);

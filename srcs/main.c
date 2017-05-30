@@ -18,8 +18,6 @@ t_env * getEnv(void) {
 }
 
 static int threadLoop(void * args) {
-	(void)args;
-
 	t_env 			* env 		= getEnv();
 	t_glh_context 	* context 	= env->context;
 	t_renderer 		* renderer 	= &(env->renderer);

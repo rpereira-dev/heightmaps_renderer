@@ -8,12 +8,6 @@ static float clamp(float val, float min, float max) {
 }
 
 static int biomMountainGenColor(t_world * world, t_biom * biom, float wx, float wy, float wz) {
-
-	(void)wz;
-	(void)wx;
-	(void)world;
-	(void)biom;
-
 	float r = wy / world->max_height;
 	if (r <= 0.08f) {
 		return (TX_WATER);
@@ -58,7 +52,6 @@ static float biomGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
 }
 
 static float biomHeightmapGenHeight(t_world * world, t_biom * biom, float wx, float wz) {
-	(void)biom;
 	int px = (int)(wx / TERRAIN_UNIT);
 	int py = (int)(wz / TERRAIN_UNIT);
 	px = clamp(px, 0, world->heightmap->w - 1);
@@ -70,17 +63,12 @@ static float biomHeightmapGenHeight(t_world * world, t_biom * biom, float wx, fl
 }
 
 static int biomHeightmapCanGenerate(t_world * world, t_biom * biom, float wx, float wz) {
-	(void)biom;
 	int px = (int)(wx / TERRAIN_UNIT);
 	int py = (int)(wz / TERRAIN_UNIT);
 	return (px >= 0 && py >= 0 && px < world->heightmap->w && py < world->heightmap->h);
 }
 
 static int biomCanGenerate(t_world * world, t_biom * biom, float wx, float wz) {
-	(void)world;
-	(void)biom;
-	(void)wx;
-	(void)wz;
 	return (1);
 }
 

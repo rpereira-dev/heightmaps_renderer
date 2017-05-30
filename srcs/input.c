@@ -1,10 +1,6 @@
 #include "renderer.h"
 
 static void inputKey(GLFWwindow * winptr, int key, int scancode, int action, int mods) {
-
-	(void)scancode;
-	(void)mods;
-
 	t_world * world = &(getEnv()->world);
 	t_renderer * renderer = &(getEnv()->renderer);
 	t_camera * camera = &(getEnv()->camera);
@@ -41,6 +37,11 @@ static void inputKey(GLFWwindow * winptr, int key, int scancode, int action, int
 		renderer->state ^= STATE_APPLY_PHONG_LIGHTNING;
 	}
 
+	//lighting
+	if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+		renderer->state ^= STATE_SPECULAR;
+	}
+
 	//culling
 	if (key == GLFW_KEY_C && action == GLFW_PRESS) {
 		renderer->state ^= STATE_LOCK_CULLING;
@@ -69,16 +70,9 @@ static void inputKey(GLFWwindow * winptr, int key, int scancode, int action, int
 }
 
 static void inputCursorPos(GLFWwindow * winptr, double xpos, double ypos) {
-	(void)winptr;
-	(void)xpos;
-	(void)ypos;
 }
 
 static void inputMouseButton(GLFWwindow * winptr, int button, int action, int mods) {
-	(void)winptr;
-	(void)button;
-	(void)action;
-	(void)mods;
 }
 
 static void inputUpdateDebug(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {

@@ -8,6 +8,11 @@ static void worldLoadHeightmap(t_world * world, char * file) {
 	}
 }
 
+static unsigned int world_vec2i_hash(t_vec2i * vec) {
+	unsigned int hash = vec->x * (TERRAIN_KEEP_LOADED_DISTANCE * 2 + 1) + vec->y;
+	return (hash);
+}
+
 void worldInit(t_world * world, char * bmpfile, float max_height) {
 	glhCheckError("pre worldInit()");
 
@@ -18,7 +23,7 @@ void worldInit(t_world * world, char * bmpfile, float max_height) {
 	biomsInit(world);
 
 	//create the terrain hash map
-	world->terrains = hmap_new(TERRAIN_KEEP_LOADED_DISTANCE * 4, (t_hf)vec2i_hash, (t_cmpf)vec2i_nequals, (t_f)NULL, (t_f)NULL);
+	world->terrains = hmap_new(TERRAIN_KEEP_LOADED_DISTANCE * 4, (t_hf)world_vec2i_hash, (t_cmpf)vec2i_nequals, (t_f)NULL, (t_f)NULL);
 	if (world->terrains == NULL) {
 		fprintf(stderr, "world.c : l.10 : worldInit() : not enough memory\n");
 		return ;
@@ -64,16 +69,12 @@ void worldDelete(t_world * world) {
 }
 
 t_biom * worldGetBiomAt(t_world * world, float wx, float wz) {
-	(void)wx;
-	(void)wz;
 	float noise = (snoise2(world->octaves[0], wx * 0.002f, wz * 0.002f) + 1.0f) * 0.5f;
 	int id = (int) (noise * world->bioms->size);
 	return (array_list_get(world->bioms, id));
 }
 
 void worldGetGridIndex(t_world * world, float worldX, float worldZ, int * gridX, int * gridY) {
-	(void)world;
-
 	*gridX = (int)worldX / TERRAIN_SIZE;
 	*gridY = (int)worldZ / TERRAIN_SIZE;
 
@@ -130,9 +131,6 @@ static void worldLoadNewTerrains(t_world * world, t_camera * camera) {
 }
 
 void worldUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera) {
-	(void)context;
-	(void)renderer;
-
 	//load new terrains
 	worldLoadNewTerrains(world, camera);
 	world->time++;

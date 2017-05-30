@@ -53,6 +53,7 @@ typedef struct	s_camera {
 # define STATE_LOCK_CULLING (4)
 # define STATE_RENDER_TRIANGLES (8)
 # define STATE_CULLING (16)
+# define STATE_SPECULAR (32)
 
 # define TX_WATER (0)
 # define TX_GRASS (1)
