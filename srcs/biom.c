@@ -59,7 +59,7 @@ static float biomHeightmapGenHeight(t_world * world, t_biom * biom, float wx, fl
 
 	int rgb = heightmapGetHeight(world->heightmap, px, py);
 	float height = rgb / (255.0f * 3.0f);
-	return (clamp(height, 0, height * world->max_height));
+	return (height * world->max_height);
 }
 
 static int biomHeightmapCanGenerate(t_world * world, t_biom * biom, float wx, float wz) {
