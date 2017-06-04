@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 Ko = 1 / 1024.0;
 Mo = 1 / (1024.0 * 1024.0);
 nmin = 4
-nmax = 4096 # nombre de point à calculer
+nmax = 32 # nombre de point à calculer
 SUB = 16.0 # nombre de points par subdivision de terrain
 
 # nombre de points total sur la carte
@@ -37,13 +37,13 @@ rM1 = [M1(n) / T(n) for n in x]
 rM2  = [M2(n) / T(n) for n in x]
 rM3  = [M3(n) / T(n) for n in x]
 
-plt.plot(x, yM1, label="M1(n)")
-plt.plot(x, yM2, label="M2(n)")
-plt.plot(x, yM3, label="M3(n)")
+#plt.plot(x, yM1, label="M1(n)")
+#plt.plot(x, yM2, label="M2(n)")
+#plt.plot(x, yM3, label="M3(n)")
 
-#plt.plot(x, rM1_28, label="M1(n) / T(n)")
-#plt.plot(x, rM2_28, label="M2(n) / T(n)")
-#plt.plot(x, rM2_16, label="M3(n) / T(n)")
+plt.plot(x, rM1, label="M1(n) / T(n)")
+plt.plot(x, rM2, label="M2(n) / T(n)")
+plt.plot(x, rM3, label="M3(n) / T(n)")
 
 plt.legend()
 plt.show()

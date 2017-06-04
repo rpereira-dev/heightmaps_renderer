@@ -13,7 +13,7 @@ static unsigned int world_vec2i_hash(t_vec2i * vec) {
 	return (hash);
 }
 
-void worldInit(t_world * world, char * bmpfile, float max_height) {
+void worldInit(t_world * world, char * bmpfile, float max_height, long seed) {
 	glhCheckError("pre worldInit()");
 
 	world->time = 0;
@@ -30,19 +30,12 @@ void worldInit(t_world * world, char * bmpfile, float max_height) {
 	}
 
 	//noise creation
-	long long unsigned int seed = time(NULL);
 	int i;
 	for (i = 0 ; i < WORLD_OCTAVES ; i++) {
 		world->octaves[i] = noiseNew();
 		noiseNextInt(&seed);
 		noiseSeed(world->octaves[i], seed);
 	}
-
-/*
-	terrain = terrainNew(0, 0);
-	terrainGenerate(world, terrain);
-	worldSpawnTerrain(world, terrain);
-*/
 
 	glhCheckError("post worldInit()");
 }

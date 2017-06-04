@@ -119,6 +119,7 @@ static void inputUpdateDebug(t_glh_context * context, t_world * world, t_rendere
 	printf("\n");
 	printf("%*s: %d\n", padding, "terrain program ID", renderer->program->id);
 	printf("%*s: %d\n", padding, "triangle drawn on last frame", renderer->vertexCount / 3);
+	printf("%*s: %d\n", padding, "terrains drawn on last frame", renderer->vertexCount / (6 * (TERRAIN_DETAIL - 1) * (TERRAIN_DETAIL - 1)));
 	printf("\n");
 
 

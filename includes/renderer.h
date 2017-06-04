@@ -139,7 +139,7 @@ void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * rende
 void rendererRender(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera);
 
 //world related functions
-void 		worldInit(t_world * world, char * bmpfile, float maxheight);
+void 		worldInit(t_world * world, char * bmpfile, float maxheight, long seed);
 void 		worldDelete(t_world * world);
 void 		worldUpdate(t_glh_context * context, t_world * world, t_renderer * renderer, t_camera * camera);
 void 		worldGetGridIndex(t_world * world, float worldX, float worldZ, int * gridX, int * gridY);

@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 	inputInit(context);
 
 	printf("Initializing world...\n");
-	worldInit(world, bmpfile, maxheight);
+	worldInit(world, bmpfile, maxheight, seed);
 
 	printf("Creating calculator thread...\n");
   	thrd_create(thrd, threadLoop, &env);

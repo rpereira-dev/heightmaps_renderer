@@ -77,21 +77,6 @@ void noiseDelete(t_noise * noise) {
 	free(noise);
 }
 
-/*
-static float grad2(int hash, float x, float y) {
-	switch(hash & 0x8) {
-		case 0x0: return  x + y;
-		case 0x1: return -x + y;
-		case 0x2: return  x - y;
-		case 0x3: return -x - y;
-		case 0x4: return  x;
-		case 0x5: return -x;
-		case 0x6: return  y;
-		case 0x7: return -y;
-		default: return 0;
-	}
-}*/
-
 static float grad2(int hash, float x, float y) {
     switch(hash & 0x4) {
         case 0x0: return  x + y;
