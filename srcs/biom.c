@@ -96,7 +96,7 @@ void biomsInit(t_world * world) {
 	if (world->heightmap == NULL) {
 		printf("No heightmaps set, generating terrain procedurally\n");
 		float step = TERRAIN_UNIT / 16.0f;
-		biomRegister(world, biomGenHeight, biomMountainGenColor, biomCanGenerate, step, 4, 1.0f, 0.5f, 0.03f, 2.0f);
+		biomRegister(world, biomGenHeight, biomMountainGenColor, biomCanGenerate, step, 1, 1.0f, 0.5f, 0.03f, 2.0f);
 	} else {
 		printf("Heightmap in use\n");
 		biomRegister(world, biomHeightmapGenHeight, biomMountainGenColor, biomHeightmapCanGenerate, TERRAIN_UNIT, 0, 0, 0, 0, 0);
