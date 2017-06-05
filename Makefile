@@ -18,7 +18,7 @@ LIB_STATIC = $(LIBC_STATIC) $(LIBM_STATIC) $(LIBGL_STATIC) $(LIBTHREAD_STATIC)
 
 SRCS = $(wildcard ./srcs/*.c)
 C_OBJ = $(SRCS:.c=.o)
-FLAGS = -Wall -Wextra
+FLAGS = -Wall -Wno-unused-variable
 INC = -I ./includes -I $(LIBC)/includes -I $(LIBM)/includes -I $(LIBGL)/include -I $(LIBTHREAD)/source
 
 
