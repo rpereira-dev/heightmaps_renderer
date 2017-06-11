@@ -211,7 +211,7 @@ void rendererUpdate(t_glh_context * context, t_world * world, t_renderer * rende
 				diff.z *= normalizer;
 
 				float dot = vec3f_dot_product(&(camera->vview), &diff);
-				if (distance <= 2 || acos_f(dot) < camera->fov || renderer->state & STATE_CULLING) {
+				if (distance <= 2 || ABS(acos_f(dot)) < camera->fov * 0.5f + 0.18f || renderer->state & STATE_CULLING) {
 					array_list_add(renderer->render_list, &terrain);
 				}
 			}
